@@ -1,0 +1,22 @@
+{% extends 'layout.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div style="text-align: center;">
+    <img src="{{ url_for('static', filename='images/hogwarts-campus.jpeg') }}"
+         alt="Hogwarts Campus"
+         style="width: 90%; max-width: 1000px; height: auto; margin-bottom: 30px; border-radius: 12px;">
+</div>
+
+<div style="text-align: center;">
+    <h2>Welcome to Hogwarts Smart Facility Booking</h2>
+    <p>This platform allows students and staff to book facilities such as:</p>
+    <ul style="list-style: none; padding-left: 0;">
+        <li>Badminton Court</li>
+        <li>Swimming Pool</li>
+        <li>Classrooms</li>
+        <li>Gym</li>
+    </ul>
+</div>
+{% endblock %}

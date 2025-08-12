@@ -1,0 +1,94 @@
+{% extends "layout.html" %}
+
+{% block title %}Booking Display{% endblock %}
+
+{% block content %}
+<h2>🗓️ Book a Facility</h2>
+
+{% if msg %}<p>{{ msg }}</p>{% endif %}
+
+<form method="get" action="/booking-display" style="margin-bottom:1rem">
+  <label>Facility:
+    <select name="facility_id" required>
+      <option value="">-- Choose --</option>
+      {% for fid, fname in facilities %}
+        <option value="{{ fid }}" {% if selected_facility|int == fid %}selected="selected"{% endif %}>
+          {{ fname }}
+        </option>
+      {% endfor %}
+    </select>
+  </label>
+
+  <label>Date:
+    <input type="date" name="date" value="{{ selected_date or '' }}" required>
+  </label>
+
+  <button type="submit">Show availability</button>
+</form>
+
+{% if selected_facility and selected_date %}
+  <h3>Availability for {{ selected_date }}</h3>
+  <table class="heatmap">
+    <thead>
+      <tr><th>Time</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+      {% for slot in slots %}
+        <tr>
+          <td>{{ slot }}</td>
+          <td class="{{ 'booked' if slot in booked else 'free' }}">
+            {{ 'Booked' if slot in booked else 'Free' }}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h3>Make a Booking</h3>
+  <form method="post" action="/booking-display">
+    <input type="hidden" name="facility_id" value="{{ selected_facility }}">
+    <input type="hidden" name="date" value="{{ selected_date }}">
+    <label>Time slot:
+      <select name="time_slot" required>
+        <option value="">-- Choose --</option>
+        {% for slot in slots %}
+          <option value="{{ slot }}"{% if slot in booked %} disabled{% endif %}>
+            {{ slot }}{% if slot in booked %} (booked){% endif %}
+          </option>
+        {% endfor %}
+      </select>
+    </label>
+    <button type="submit">Book</button>
+  </form>
+{% endif %}
+
+<hr>
+
+<h3>My Bookings</h3>
+{% if my_bookings %}
+  <table>
+    <thead>
+      <tr><th>ID</th><th>Facility</th><th>Date</th><th>Time</th><th>Action</th></tr>
+    </thead>
+    <tbody>
+      {% for b in my_bookings %}
+        <tr>
+          <td>{{ b.id }}</td>
+          <td>{{ b.facility }}</td>
+          <td>{{ b.date }}</td>
+          <td>{{ b.timeslot }}</td>
+          <td>
+            <form method="post" action="/booking-display/cancel/{{ b.id }}" onsubmit="return confirm('Cancel this booking?')">
+              <button type="submit">Cancel</button>
+            </form>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p>No bookings found.</p>
+{% endif %}
+{% endblock %}
+
+

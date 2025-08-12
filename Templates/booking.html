@@ -1,0 +1,27 @@
+{% extends 'layout.html' %}
+
+{% block title %}Booking{% endblock %}
+
+{% block content %}
+    <h2>Book a Facility</h2>
+    {% if msg %}
+        <p>{{ msg }}</p>
+    {% endif %}
+    <form method="POST">
+        <label>Facility:</label><br>
+        <select name="facility_id">
+            {% for f in facilities %}
+                <option value="{{ f[0] }}">{{ f[1] }} ({{ f[2] }})</option>
+            {% endfor %}
+        </select><br>
+        <label>Date:</label><br>
+        <input type="date" name="date" required><br>
+        <label>Start Time:</label><br>
+        <input type="time" name="start_time" required><br>
+        <label>End Time:</label><br>
+        <input type="time" name="end_time" required><br>
+        <input type="submit" value="Book Now">
+    </form>
+{% endblock %}
+
+

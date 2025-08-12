@@ -1,0 +1,56 @@
+{% extends 'layout.html' %}
+{% block title %}Register{% endblock %}
+{% block body_class %}login-page{% endblock %}
+
+{% block content %}
+<div class="form-container">
+  <h2>Register</h2>
+  <form method="POST">
+    <input type="text" name="username" placeholder="Choose a username" required><br>
+    <input type="password" name="password" placeholder="Choose a password" required><br>
+    <input type="submit" value="Register">
+  </form>
+</div>
+
+{# --- SUCCESS POPUP (render only if success flashed) --- #}
+{% with success = get_flashed_messages(category_filter=['success']) %}
+  {% if success %}
+    <!-- Bootstrap modal (or your custom popup) -->
+    <div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">Registration Successful</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          {{ success[0] }}
+        </div>
+        <div class="modal-footer">
+          <a href="/login" class="btn btn-primary">Go to Login</a>
+        </div>
+      </div></div>
+    </div>
+
+    <script>
+      // show the modal only when success exists
+      document.addEventListener('DOMContentLoaded', function () {
+        // if using Bootstrap 4 + jQuery:
+        $('#successModal').modal('show');
+      });
+    </script>
+  {% endif %}
+{% endwith %}
+
+{# Optional: show warnings/errors below the form #}
+{% with msgs = get_flashed_messages(with_categories=true) %}
+  {% if msgs %}
+    {% for category, message in msgs %}
+      {% if category != 'success' %}
+        <p class="flash {{ category }}">{{ message }}</p>
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+{% endblock %}
+
