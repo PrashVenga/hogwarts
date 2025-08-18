@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Booking Display</title>
+  <link rel="stylesheet" href="/style.css"/>
+</head>
+<body class="booking-page">
+  <!-- Home button (fixed top-left) -->
+  <a class="home-button" href="/index">Home</a>
+
+  <div class="booking-container">
+    <h2>🗓️ Book a Facility</h2>
+    <p id="message"></p>
+
+    <!-- Search -->
+    <form id="availabilityForm" style="margin-bottom:1rem">
+      <label>Facility:
+        <select id="facilitySelect" required>
+          <option value="">-- Choose --</option>
+        </select>
+      </label>
+
+      <label>Date:
+        <input type="date" id="dateInput" required>
+      </label>
+
+      <button type="submit">Show availability</button>
+    </form>
+
+    <!-- Availability -->
+    <div id="availabilitySection" style="display:none;">
+      <h3>Availability for <span id="selectedDate"></span></h3>
+      <table class="heatmap">
+        <thead>
+          <tr><th>Time</th><th>Status</th></tr>
+        </thead>
+        <tbody id="availabilityTableBody"></tbody>
+      </table>
+
+      <!-- Booking controls (shown only when there are free slots) -->
+      <div id="bookBox" style="margin-top:1rem; display:none;">
+        <label for="timeSlot"><strong>Time slot:</strong></label>
+        <select id="timeSlot"></select>
+        <button id="bookBtn" style="margin-left:8px;">Book</button>
+        <span id="bookMsg" style="margin-left:10px;"></span>
+      </div>
+    </div>
+
+    <hr>
+
+    <!-- My bookings -->
+    <h3>My Bookings</h3>
+    <div id="myBookingsSection">
+      <p>Loading...</p>
+    </div>
+  </div>
+
+  <script>
+    const messageEl = document.getElementById("message");
+    const facilitySelect = document.getElementById("facilitySelect");
+    const dateInput = document.getElementById("dateInput");
+    const availabilitySection = document.getElementById("availabilitySection");
+    const selectedDateEl = document.getElementById("selectedDate");
+    const availabilityTableBody = document.getElementById("availabilityTableBody");
+
+    const ALL_SLOTS = [
+      "08:00-09:00","09:00-10:00","10:00-11:00","11:00-12:00",
+      "13:00-14:00","14:00-15:00","15:00-16:00","16:00-17:00",
+      "17:00-18:00","18:00-19:00","19:00-20:00","20:00-21:00","21:00-22:00"
+    ];
+
+    async function loadFacilities() {
+      try {
+        const res = await fetch("/api/facilities");
+        const facilities = await res.json();
+        facilitySelect.innerHTML =
+          '<option value="">-- Choose --</option>' +
+          facilities.map(f => {
+            const id = f.id ?? f.facility_id;
+            return `<option value="${id}">${f.name}</option>`;
+          }).join("");
+      } catch {
+        messageEl.textContent = "Error loading facilities.";
+      }
+    }
+
+    async function loadAvailability() {
+      const facilityId = Number(facilitySelect.value);
+      const dateISO = dateInput.value;
+      if (!facilityId || !dateISO) return;
+
+      try {
+        const res = await fetch(`/api/bookings/booked?facilityId=${facilityId}&date=${dateISO}`);
+        const data = await res.json();
+        const bookedSet = new Set(data.booked || []);
+
+        availabilityTableBody.innerHTML = "";
+        for (const slot of ALL_SLOTS) {
+          const tr = document.createElement("tr");
+          const tdTime = document.createElement("td");
+          tdTime.textContent = slot;
+          tdTime.className = "heatmap-slot";
+          const tdStatus = document.createElement("td");
+          const isBooked = bookedSet.has(slot);
+          tdStatus.className = "heatmap-cell " + (isBooked ? "booked" : "free");
+          tdStatus.textContent = isBooked ? "Booked" : "Free";
+          tr.append(tdTime, tdStatus);
+          availabilityTableBody.appendChild(tr);
+        }
+
+        availabilitySection.style.display = "block";
+        selectedDateEl.textContent = dateISO;
+
+        showBookingUI(facilityId, dateISO, bookedSet);
+      } catch {
+        messageEl.textContent = "Error loading availability.";
+      }
+    }
+
+    function showBookingUI(facilityId, dateISO, bookedSet) {
+      const box = document.getElementById('bookBox');
+      const sel = document.getElementById('timeSlot');
+      const btn = document.getElementById('bookBtn');
+      const msg = document.getElementById('bookMsg');
+
+      sel.innerHTML = "";
+      const free = ALL_SLOTS.filter(s => !bookedSet.has(s));
+      for (const s of free) {
+        const opt = document.createElement('option');
+        opt.value = s;
+        opt.textContent = s;
+        sel.appendChild(opt);
+      }
+
+      box.style.display = free.length ? 'block' : 'none';
+      msg.textContent = free.length ? '' : 'No free slots for this date.';
+
+      btn.onclick = async () => {
+        msg.textContent = 'Booking…';
+        const body = new URLSearchParams({
+          facility_id: facilityId,
+          date: dateISO,
+          time_slot: sel.value
+        }).toString();
+
+        try {
+          const r = await fetch('/api/bookings/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body
+          });
+
+          const j = await r.json().catch(() => ({}));
+          if (r.ok) {
+            msg.textContent = '✅ ' + (j.message || 'Booked!');
+            await loadAvailability();
+            await loadMyBookings();
+          } else if (r.status === 401) {
+            msg.textContent = '⚠️ Please log in.';
+            setTimeout(() => location.href = '/login', 800);
+          } else {
+            msg.textContent = '❌ ' + (j.error || `Booking failed (HTTP ${r.status})`);
+          }
+        } catch {
+          msg.textContent = '❌ Network error';
+        }
+      };
+    }
+
+    async function loadMyBookings() {
+      try {
+        const res = await fetch("/api/bookings/mine");
+        const wrap = document.getElementById("myBookingsSection");
+
+        if (!res.ok) {
+          wrap.innerHTML = "<p>Please log in to see your bookings.</p>";
+          return;
+        }
+        const bookings = await res.json();
+        if (!bookings.length) {
+          wrap.innerHTML = "<p>No bookings found.</p>";
+          return;
+        }
+
+        wrap.innerHTML = `
+          <table>
+            <thead>
+              <tr><th>ID</th><th>Facility</th><th>Date</th><th>Time</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+              ${bookings.map(b => `
+                <tr>
+                  <td>${b.id}</td>
+                  <td>${b.facility}</td>
+                  <td>${b.date}</td>
+                  <td>${b.timeslot}</td>
+                  <td><button class="cancel-btn" data-id="${b.id}">Cancel</button></td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        `;
+
+        wrap.querySelectorAll(".cancel-btn").forEach(btn => {
+          btn.addEventListener("click", async () => {
+            if (!confirm("Cancel this booking?")) return;
+            const id = btn.getAttribute("data-id");
+            const r = await fetch(`/api/bookings/cancel/${id}`, { method: "POST" });
+            if (r.ok) {
+              messageEl.textContent = "Booking canceled.";
+              await loadMyBookings();
+              await loadAvailability();
+            } else {
+              messageEl.textContent = "Error canceling booking.";
+            }
+          });
+        });
+      } catch {
+        document.getElementById("myBookingsSection").innerHTML = "<p>Error loading bookings.</p>";
+      }
+    }
+
+    document.getElementById("availabilityForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      loadAvailability();
+    });
+
+    (function setToday() {
+      const d = new Date();
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      dateInput.value = `${y}-${m}-${day}`;
+    })();
+
+    loadFacilities();
+    loadMyBookings();
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,15 @@
+<header>
+  <nav>
+    <a href="/home">Home</a>
+    <a href="/booking-display" data-auth="in">Booking</a>
+
+    <!-- show only when LOGGED OUT -->
+    <a href="/login" data-auth="out">Login</a>
+    <a href="/register" data-auth="out">Register</a>
+
+    <!-- show only when LOGGED IN -->
+    <button id="logoutBtn" class="logout-button" data-auth="in" style="display:none;">
+      Logout
+    </button>
+  </nav>
+</header>
