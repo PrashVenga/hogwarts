@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <!-- simple nav (optional) -->
+  <nav>
+    <a href="/home">Home</a>
+    <a href="/booking-display">Booking</a>
+    <a href="/dashboard">Dashboard</a>
+    <button class="logout-button" id="logoutBtn">Logout</button>
+  </nav>
+
+  <main class="booking-container" style="max-width: 700px; margin-top: 60px;">
+    <h2 id="welcome">Welcome!</h2>
+    <p id="roleLine"></p>
+    <p>Use the navigation above to explore the system.</p>
+  </main>
+
+  <script>
+    async function loadMe() {
+      const res = await fetch('/api/auth/me');
+      if (!res.ok) {
+        // not logged in → go to login
+        location.href = '/login';
+        return;
+      }
+      const data = await res.json();
+      if (!data.user) {
+        location.href = '/login';
+        return;
+      }
+      const { username, role } = data.user;
+      document.getElementById('welcome').textContent = `Welcome, ${username}!`;
+      document.getElementById('roleLine').textContent = `Your role: ${role}`;
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      location.href = '/login';
+    });
+
+    loadMe();
+  </script>
+</body>
+</html>

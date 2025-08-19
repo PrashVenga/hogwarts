@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register</title>
+  <link rel="stylesheet" href="/style.css" />
+  <!-- inject header/footer + toggle auth links -->
+  <script src="/js/layout.js" defer></script>
+</head>
+<body class="login-page">
+  <!-- injected header/nav -->
+  <div id="site-header"></div>
+
+  <!-- Optional tiny fixed Home button (remove if your header already has Home) -->
+  <a class="home-button" href="/">Home</a>
+
+  <div class="form-container">
+    <h2>Register</h2>
+
+    <form id="registerForm" method="POST" action="/api/auth/register">
+      <!-- `username` works; server maps it to hogwartsId -->
+      <input name="username" placeholder="Choose a Hogwarts ID" required />
+      <input name="password" type="password" placeholder="Choose a password" required />
+      <button type="submit">Create account</button>
+    </form>
+
+    <p id="regMsg"></p>
+
+    <nav style="margin-top: 1rem;">
+      <a href="/login">Back to Login</a>
+    </nav>
+  </div>
+
+  <!-- injected footer (delete this div if you don’t have /partials/footer.html yet) -->
+  <div id="site-footer"></div>
+
+  <script>
+    const form = document.getElementById('registerForm');
+    const msg  = document.getElementById('regMsg');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msg.textContent = 'Creating account…';
+
+      try {
+        const body = new URLSearchParams(new FormData(form)).toString();
+        const r = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body
+        });
+
+        const j = await r.json().catch(() => ({}));
+
+        if (r.ok) {
+          msg.textContent = '✅ ' + (j.message || 'Registered. Redirecting to login…');
+          setTimeout(() => (location.href = '/login'), 800);
+        } else if (r.status === 409) {
+          msg.textContent = '❌ That ID already exists';
+        } else {
+          msg.textContent = '❌ ' + (j.error || `Registration failed (HTTP ${r.status})`);
+        }
+      } catch (err) {
+        console.error(err);
+        msg.textContent = '❌ Network error (server not reachable)';
+      }
+    });
+  </script>
+</body>
+</html>

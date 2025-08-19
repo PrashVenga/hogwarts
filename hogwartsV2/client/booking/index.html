@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Booking</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body class="booking-page">
+  <!-- injected header/nav -->
+  <div id="site-header"></div>
+
+  <div class="booking-container">
+    <h2>Book a Facility</h2>
+    <p id="message"></p>
+
+    <form id="bookingForm">
+      <label for="facility_id">Facility:</label>
+      <select id="facility_id" name="facility_id" required></select>
+
+      <label for="date">Date:</label>
+      <input type="date" id="date" name="date" required />
+
+      <label for="time_slot">Time Slot:</label>
+      <select id="time_slot" name="time_slot" required></select>
+
+      <button type="submit">Book Now</button>
+    </form>
+
+    <div class="availability-grid" id="availabilityGrid"></div>
+  </div>
+
+  <!-- injected footer -->
+  <div id="site-footer"></div>
+
+  <!-- layout (injects header/footer + toggles auth links) -->
+  <script src="/js/layout.js" defer></script>
+
+  <!-- page logic -->
+  <script>
+  (function () {
+    const facilitySelect = document.getElementById("facility_id");
+    const dateInput      = document.getElementById("date");
+    const slotSelect     = document.getElementById("time_slot");
+    const messageEl      = document.getElementById("message");
+    const gridEl         = document.getElementById("availabilityGrid");
+
+    const SLOTS = [
+      "08:00-09:00","09:00-10:00","10:00-11:00","11:00-12:00",
+      "13:00-14:00","14:00-15:00","15:00-16:00","16:00-17:00",
+      "17:00-18:00","18:00-19:00","19:00-20:00","20:00-21:00","21:00-22:00"
+    ];
+
+    // set default date = today
+    (function setToday() {
+      const d = new Date();
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      const today = `${y}-${m}-${day}`;
+      dateInput.value = today;
+      dateInput.min   = today; // optional: prevent past days
+    })();
+
+    async function loadFacilities() {
+      try {
+        const res = await fetch("/api/facilities");
+        const facilities = await res.json();
+        facilitySelect.innerHTML = facilities
+          .map(f => {
+            const id = f.id ?? f.facility_id; // be tolerant of either shape
+            return `<option value="${id}">${f.name}</option>`;
+          })
+          .join("");
+      } catch (err) {
+        console.error(err);
+        messageEl.textContent = "Error loading facilities.";
+      }
+    }
+
+    function renderGrid(bookedSet) {
+      // simple labelled list of slots (green free / red booked) using your CSS
+      gridEl.innerHTML = SLOTS.map(slot => {
+        const cls = bookedSet.has(slot) ? "booked" : "free";
+        const label = bookedSet.has(slot) ? "Booked" : "Free";
+        return `
+          <div style="display:flex;justify-content:space-between;align-items:center;margin:.25rem 0;">
+            <div class="heatmap-slot">${slot}</div>
+            <div class="heatmap-cell ${cls}" style="width:80px;text-align:center;padding:.25rem 0;">${label}</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    async function loadSlots() {
+      const facilityId = Number(facilitySelect.value);
+      const date = dateInput.value;
+      if (!facilityId || !date) return;
+
+      try {
+        const res = await fetch(`/api/bookings/booked?facilityId=${facilityId}&date=${encodeURIComponent(date)}`);
+        const data = await res.json();
+        const bookedSet = new Set(data.booked || []);
+
+        // fill select (disable booked)
+        slotSelect.innerHTML = SLOTS.map(slot => {
+          const disabled = bookedSet.has(slot) ? "disabled" : "";
+          return `<option value="${slot}" ${disabled}>${slot}${disabled ? " (Booked)" : ""}</option>`;
+        }).join("");
+
+        renderGrid(bookedSet);
+      } catch (err) {
+        console.error(err);
+        messageEl.textContent = "Error loading slots.";
+      }
+    }
+
+    document.getElementById("bookingForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const facilityId = Number(facilitySelect.value);
+      const date = dateInput.value;
+      const time_slot = slotSelect.value;
+      if (!facilityId || !date || !time_slot) return;
+
+      try {
+        const res = await fetch("/api/bookings/create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ facilityId, date, time_slot })
+        });
+        const data = await res.json().catch(() => ({}));
+
+        if (res.ok) {
+          messageEl.textContent = data.message || "Booking successful!";
+          messageEl.style.color = "lightgreen";
+          await loadSlots();
+        } else if (res.status === 401) {
+          messageEl.textContent = "Please log in to book.";
+          setTimeout(() => location.href = "/login", 700);
+        } else {
+          messageEl.textContent = data.error || `Booking failed (HTTP ${res.status})`;
+          messageEl.style.color = "red";
+        }
+      } catch (err) {
+        console.error(err);
+        messageEl.textContent = "Booking error.";
+        messageEl.style.color = "red";
+      }
+    });
+
+    facilitySelect.addEventListener("change", loadSlots);
+    dateInput.addEventListener("change", loadSlots);
+
+    // init
+    (async () => {
+      await loadFacilities();
+      await loadSlots();
+    })();
+  })();
+  </script>
+</body>
+</html>

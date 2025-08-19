@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login</title>
+  <link rel="stylesheet" href="/style.css" />
+  <!-- inject header/footer + toggle auth links -->
+  <script src="/js/layout.js" defer></script>
+</head>
+<body class="login-page">
+  <!-- injected header/nav -->
+  <div id="site-header"></div>
+
+  <!-- Optional tiny fixed Home button (you can delete this if the header nav is enough) -->
+  <a class="home-button" href="/">Home</a>
+
+  <div class="form-container">
+    <h2>Login</h2>
+
+    <form id="loginForm" method="POST" action="/api/auth/login">
+      <input name="username" placeholder="Hogwarts ID" required />
+      <input name="password" type="password" placeholder="Password" required />
+      <button type="submit">Login</button>
+    </form>
+
+    <p id="msg"></p>
+
+    <nav style="margin-top: 1rem;">
+      <a href="/register">Register</a>
+    </nav>
+  </div>
+
+  <!-- injected footer (remove this div if you don’t have /partials/footer.html yet) -->
+  <div id="site-footer"></div>
+
+  <script>
+    const form = document.getElementById('loginForm');
+    const msg  = document.getElementById('msg');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msg.textContent = 'Signing in…';
+
+      try {
+        // send as x-www-form-urlencoded (matches your Express handler)
+        const body = new URLSearchParams(new FormData(form)).toString();
+
+        const r = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body
+        });
+
+        const j = await r.json().catch(() => ({}));
+
+        if (r.ok) {
+          msg.textContent = '✅ Logged in';
+          location.href = '/booking-display';
+        } else {
+          msg.textContent = '❌ ' + (j.error || `Login failed (HTTP ${r.status})`);
+        }
+      } catch (err) {
+        console.error(err);
+        msg.textContent = '❌ Network error (server not reachable)';
+      }
+    });
+  </script>
+</body>
+</html>
+
