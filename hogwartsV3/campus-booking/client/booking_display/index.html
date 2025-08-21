@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>My Bookings | Hogwarts</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    .booking-container {
+      max-width: 700px;
+      margin: 2rem auto;
+      padding: 1.5rem;
+      background: rgba(10,10,20,0.85);
+      border: 2px solid #ffdd57;
+      border-radius: 12px;
+      color: #f0e6c8;
+      position: relative;
+    }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { padding: 0.6rem; border: 1px solid #444; }
+    .actions { display:flex; gap:12px; margin-top:10px; }
+    button.cancel-btn {
+      background: #c0392b; border: none; color: #fff; padding: 0.3rem 0.6rem;
+      border-radius: 4px; cursor: pointer; transition: background 0.2s;
+    }
+    button.cancel-btn:hover { background: #e74c3c; }
+    .nav-btn { background:#1f2a44; color:#fff; border:none; padding:.4rem .7rem; border-radius:6px; cursor:pointer; }
+  </style>
+ <script>
+/* Global toast with optional below-placement */
+function showToast(message, isError = false, opts = {}) {
+  const placeBelow = opts.placement === 'below';
+
+  // ensure a toast element exists
+  let el = document.getElementById('toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'toast';
+    el.className = 'toast';
+  }
+
+  // When placing below, append into the booking card so absolute
+  // positioning is relative to it.
+  if (placeBelow) {
+    const host = document.querySelector('.booking-container') || document.body;
+    if (el.parentElement !== host) host.appendChild(el);
+    el.classList.add('toast--below');
+  } else {
+    if (el.parentElement !== document.body) document.body.appendChild(el);
+    el.classList.remove('toast--below');
+  }
+
+  el.textContent = message;
+  el.classList.toggle('error', !!isError);
+  document.body.offsetWidth; // reflow to restart animation
+  el.classList.add('show');
+
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(() => el.classList.remove('show'), 2000);
+}
+</script>
+ 
+</head>
+<body class="booking-page">
+  <div class="booking-container">
+    <h2>🗓️ My Bookings</h2>
+    <p>If you need to cancel, click <strong>Cancel</strong> below:</p>
+
+    <div class="actions">
+      <button type="button" id="refreshBtn" class="view-bookings-btn">Refresh</button>
+      <a href="../booking/index.html" class="nav-btn" style="text-decoration:none; display:inline-block; line-height:28px;">Back to Booking</a>
+      <button id="logoutBtn" class="nav-btn" style="margin-left:auto;">Logout</button>
+    </div>
+
+    <table id="myBookingsTable">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Facility</th>
+          <th>Date</th>
+          <th>Time</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+<script>
+  const API = ''; // same-origin
+
+  // tiny toast (optional visual feedback)
+  function showToast(message) {
+    let el = document.getElementById('toast');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'toast';
+      el.className = 'toast';
+      document.body.appendChild(el);
+    }
+    el.textContent = message;
+    el.classList.add('show');
+    clearTimeout(window.__toastTimer);
+    window.__toastTimer = setTimeout(() => el.classList.remove('show'), 1500);
+  }
+
+  // Load this user's bookings
+  async function loadMyBookings() {
+    const hogwartsId =
+      localStorage.getItem('hogwartsId') ||
+      localStorage.getItem('username');
+
+    if (!hogwartsId) {
+      window.location.href = '../login/index.html';
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API}/api/my-bookings?hogwartsId=${encodeURIComponent(hogwartsId)}`);
+      const data = await res.json().catch(() => ({}));
+      // API shape is { ok:true, items:[...] }
+      const items = Array.isArray(data) ? data : (data.items || []);
+      renderTable(items);
+    } catch (err) {
+      console.error('Error loading your bookings:', err);
+      renderTable([]);
+    }
+  }
+
+  // Render rows
+  function renderTable(list) {
+    const tbody = document.querySelector('#myBookingsTable tbody');
+    tbody.innerHTML = '';
+    if (!Array.isArray(list) || list.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">No bookings found.</td></tr>';
+      return;
+    }
+    list.forEach(b => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${b.id}</td>
+        <td>${b.facility}</td>
+        <td>${b.date}</td>
+        <td>${b.timeSlot}</td>
+        <td><button type="button" class="cancel-btn" onclick="cancelBooking(${b.id})">Cancel</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // Cancel a booking
+  async function cancelBooking(id) {
+    if (!confirm('Are you sure you want to cancel this booking?')) return;
+    try {
+      const res = await fetch(`${API}/api/book/${id}`, { method: 'DELETE' });
+      if (!res.ok) console.warn('Delete failed with status', res.status);
+      await loadMyBookings();
+      showToast('Booking canceled');
+    } catch (err) {
+      console.error('Error cancelling booking:', err);
+    }
+  }
+  window.cancelBooking = cancelBooking; // expose for inline onclick
+
+  // Wire controls
+  document.addEventListener('DOMContentLoaded', () => {
+    const refresh = document.getElementById('refreshBtn');
+    if (refresh) {
+      refresh.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        loadMyBookings().then(() => showToast('Refreshed'));
+      });
+    }
+
+    const logout = document.getElementById('logoutBtn');
+    if (logout) {
+      logout.addEventListener('click', () => {
+        localStorage.removeItem('hogwartsId');
+        localStorage.removeItem('role');
+        window.location.href = '../login/index.html';
+      });
+    }
+
+    loadMyBookings();
+  });
+</script>
+
+<!-- optional toast host if your CSS includes .toast styles -->
+<div id="toast" class="toast" aria-live="polite"></div>
+
+</body>
+</html>

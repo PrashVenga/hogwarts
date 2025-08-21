@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Book a Facility | Hogwarts</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../style.css" />
+  <!-- Load JS after parsing (prevents null element lookups) -->
+  <script defer src="./script.js"></script>
+</head>
+<body class="booking-page">
+
+  <!-- toast node (gets moved inside the card when placement:'below') -->
+  <div id="toast" class="toast" aria-live="polite"></div>
+
+  <!-- ✅ MISSING WRAPPER ADDED -->
+  <div class="booking-container">
+    <button id="logoutBtn" class="logout-button">Logout</button>
+
+    <h2>📚 Book a Facility</h2>
+
+    <form id="bookingForm">
+      <div class="form-group">
+        <label for="facility">Select Facility:</label>
+        <select id="facility" required>
+          <option value="">— Select Facility —</option>
+          <option value="5">Badminton Court</option>
+          <option value="6">Swimming Pool</option>
+          <option value="7">Gym</option>
+          <option value="1">Classroom 1</option>
+          <option value="2">Classroom 2</option>
+          <option value="3">Classroom 3</option>
+          <option value="4">Classroom 4</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="bookingDate">Select Date:</label>
+        <input type="date" id="bookingDate" required />
+      </div>
+
+      <div id="availabilityGrid" class="availability-grid"></div>
+
+      <div class="form-group">
+        <label for="timeSlot">Select Time Slot:</label>
+        <select id="timeSlot" required>
+          <option value="">— Select Time Slot —</option>
+          <option value="08:00-09:00">08:00 – 09:00</option>
+          <option value="09:00-10:00">09:00 – 10:00</option>
+          <option value="10:00-11:00">10:00 – 11:00</option>
+          <option value="11:00-12:00">11:00 – 12:00</option>
+          <option value="13:00-14:00">13:00 – 14:00</option>
+          <option value="14:00-15:00">14:00 – 15:00</option>
+          <option value="15:00-16:00">15:00 – 16:00</option>
+          <option value="16:00-17:00">16:00 – 17:00</option>
+          <option value="17:00-18:00">17:00 – 18:00</option>
+          <option value="18:00-19:00">18:00 – 19:00</option>
+          <option value="19:00-20:00">19:00 – 20:00</option>
+          <option value="20:00-21:00">20:00 – 21:00</option>
+          <option value="21:00-22:00">21:00 – 22:00</option>
+        </select>
+      </div>
+
+      <div class="actions">
+        <a href="../booking_display/index.html" class="view-bookings-btn">View My Bookings</a>
+        <button type="submit" class="book-now-btn">Book Now</button>
+      </div>
+    </form>
+
+    <div id="bookingResult"></div>
+  </div><!-- /.booking-container -->
+
+  <!-- Global toast helper -->
+  <script>
+    function showToast(message, isError = false, opts = {}) {
+      const placeBelow = opts.placement === 'below';
+      let el = document.getElementById('toast');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'toast';
+        el.className = 'toast';
+      }
+      if (placeBelow) {
+        const host = document.querySelector('.booking-container') || document.body;
+        if (el.parentElement !== host) host.appendChild(el);
+        el.classList.add('toast--below');
+      } else {
+        if (el.parentElement !== document.body) document.body.appendChild(el);
+        el.classList.remove('toast--below');
+      }
+      el.textContent = message;
+      el.classList.toggle('error', !!isError);
+      document.body.offsetWidth; // reflow
+      el.classList.add('show');
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => el.classList.remove('show'), 2000);
+    }
+  </script>
+
+  <!-- TEMP rescue styles (remove once style.css is fixed and parsed fully) -->
+  <style>
+    body.booking-page{ margin:0; min-height:100svh; display:grid; place-items:center;
+      background: radial-gradient(circle at top left,#1b2735 0%,#090a0f 50%,#03060b 100%);
+      font-family:'Cinzel Decorative',cursive; color:#f0e6c8;}
+    .booking-container{ width:min(92vw,520px); padding:2rem 2.5rem; background:rgba(10,10,20,.85);
+      border:2px solid #ffdd57; border-radius:12px; position:relative; text-align:center;
+      box-shadow:0 0 15px rgba(106,13,173,.7), inset 0 0 10px rgba(255,221,87,.4); }
+    .booking-container h2{ margin:0 0 1rem; font-size:2.2rem; color:#ffdd57; letter-spacing:.06em;
+      text-shadow:0 0 8px #ffdd57,0 0 16px #c77dff,0 0 24px #6a0dad;}
+    .booking-container .form-group{ margin-bottom:1.1rem; text-align:left;}
+    .booking-container label{ display:block; margin-bottom:.5rem; font-weight:600;}
+    .booking-container select,.booking-container input[type="date"]{ width:100%; padding:.75rem 1rem;
+      border:none; border-radius:8px; background:#1a2533; color:#f0e6c8; box-shadow: inset 0 0 8px rgba(0,0,0,.5); }
+    .actions{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:.5rem;}
+    .view-bookings-btn{ background:#ffdd57; color:#0a0a20; font-weight:700; border-radius:8px; padding:.85rem 1rem;
+      display:block; text-align:center; text-decoration:none;}
+    .book-now-btn{ padding:.85rem 1rem; font-weight:700; color:#fff; background:linear-gradient(135deg,#6a0dad,#c77dff);
+      border:none; border-radius:10px; cursor:pointer; box-shadow:0 0 10px #6a0dad,0 0 20px #c77dff;}
+    #logoutBtn{ position:absolute; top:8px; right:12px; display:inline-flex; gap:6px; background:transparent; color:#fff;
+      border:1px solid rgba(255,255,255,.85); border-radius:6px; font-size:12px; padding:4px 10px; line-height:1;}
+  </style>
+</body>
+</html>
