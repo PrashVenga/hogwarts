@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Register | Hogwarts</title>
+
+  <!-- Fonts & shared styles -->
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet" />
+  <!-- register lives at /register, so /style.css is correct -->
+  <link rel="stylesheet" href="/style.css" />
+
+  <!-- Minimal toast CSS (works even if style.css misses it) -->
+  <style>
+    .toast{
+      position:fixed; top:16px; right:16px;
+      background:#2e7d32; color:#fff; padding:10px 14px;
+      border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,.35);
+      opacity:0; transform:translateY(-8px);
+      transition:opacity .18s, transform .18s;
+      z-index:2147483647; pointer-events:none; font-weight:600
+    }
+    .toast.error{ background:#c62828 }
+    .toast.show{ opacity:1; transform:translateY(0) }
+  </style>
+</head>
+
+<body class="login-page">
+  <div class="form-container">
+    <h2>Create Account</h2>
+
+    <form id="registerForm">
+      <label for="hogwartsId">🆔 Hogwarts ID</label>
+      <input type="text" id="hogwartsId" placeholder="your-hogwarts-id" required />
+
+      <label for="password">🔒 Password</label>
+      <input type="password" id="password" placeholder="••••" required maxlength="72" autocomplete="new-password" />
+
+      <label for="role">🎩 Role</label>
+      <select id="role" required>
+        <option value="">— select role —</option>
+        <option value="student">student</option>
+        <option value="teacher">teacher</option>
+        <option value="admin">admin</option>
+      </select>
+
+      <button type="submit" id="submitBtn">Register</button>
+    </form>
+
+    <p>Already have an account? <a href="/login/index.html">Login here</a></p>
+    <div id="registerResult"></div>
+  </div>
+
+  <!-- Toast node -->
+  <div id="toast" class="toast" aria-live="polite"></div>
+
+  <!-- Page script -->
+  <script>
+    console.log('REGISTER PAGE LOADED');
+
+    function showToast(message, isError = false) {
+      const el = document.getElementById('toast');
+      el.textContent = message;
+      el.className = 'toast' + (isError ? ' error' : '');
+      // make sure it appears even if external CSS conflicts
+      el.style.display = 'block';
+      void el.offsetWidth;           // reflow to retrigger transition
+      el.classList.add('show');
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => {
+        el.classList.remove('show');
+        setTimeout(() => { el.style.display = ''; }, 200);
+      }, 2000);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('registerForm');
+      const msg  = document.getElementById('registerResult');
+      const btn  = document.getElementById('submitBtn');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        console.log('SUBMIT HANDLER FIRED');
+        msg.textContent = '';
+
+        const hogwartsId = document.getElementById('hogwartsId').value.trim().toLowerCase();
+        const password   = document.getElementById('password').value;
+        const role       = document.getElementById('role').value;
+
+        if (!/^[a-z0-9._-]{3,30}$/.test(hogwartsId)) {
+          msg.style.color = '#ff9999';
+          msg.textContent = '❌ ID must be 3–30 chars (letters, numbers, . _ -)';
+          showToast('Invalid Hogwarts ID format', true);
+          return;
+        }
+        if (!role) {
+          msg.style.color = '#ff9999';
+          msg.textContent = '❌ Please select a role.';
+          showToast('Please select a role', true);
+          return;
+        }
+
+        btn.disabled = true;
+
+        try {
+          const res  = await fetch('/api/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ hogwartsId, password, role })
+          });
+          const data = await res.json().catch(() => ({}));
+          const ok = res.ok && (data.ok === true || data.success === true);
+
+          if (ok) {
+            console.log('SUCCESS PATH REACHED', data);
+            msg.style.color = '#b3ffb3';
+            msg.textContent = '✅ Registered! Redirecting to login…';
+            showToast('🎉 Registration successful!');
+            setTimeout(() => { window.location.href = '/login/index.html'; }, 1600);
+          } else if (res.status === 409) {
+            msg.style.color = '#ff9999';
+            msg.textContent = '❌ That Hogwarts ID already exists.';
+            showToast('Hogwarts ID already exists', true);
+          } else {
+            const err = data.error || 'Registration failed';
+            msg.style.color = '#ff9999';
+            msg.textContent = `❌ ${err}`;
+            showToast(err, true);
+          }
+        } catch (err) {
+          console.error(err);
+          msg.style.color = '#ff9999';
+          msg.textContent = 'Network error — please try again.';
+          showToast('Network error — try again', true);
+        } finally {
+          btn.disabled = false;
+        }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,497 @@
+/* =========================================================================
+   Base / Theme
+   ========================================================================= */
+:root{
+  --bg-grad-a:#1b2735;
+  --bg-grad-b:#090a0f;
+  --gold:#ffdd57;
+  --violet:#6a0dad;
+  --text:#fceabb;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 30px;
+  background: linear-gradient(to right, var(--bg-grad-a), var(--bg-grad-b));
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* Headings & text */
+h1, h2, h3 { margin: 0 0 .75rem; }
+h1 {
+  font-size: 3em;
+  text-align: center;
+  color: var(--gold);
+  text-shadow: 0 0 10px var(--gold), 0 0 20px #ffd700;
+}
+p {
+  font-size: 1.2em;
+  line-height: 1.6;
+  max-width: 800px;
+  margin: 0 auto 20px;
+  text-align: center;
+}
+
+/* Link-as-button (generic) */
+a {
+  display: block;
+  width: fit-content;
+  margin: 30px auto 0;
+  background: var(--violet);
+  color: #fff;
+  padding: 12px 24px;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 1.1em;
+  text-align: center;
+  box-shadow: 0 0 10px var(--violet), 0 0 20px var(--violet);
+  transition: transform .3s ease, box-shadow .3s ease;
+}
+a:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px #c77dff, 0 0 30px #c77dff;
+}
+
+/* Hero image */
+.hogwarts-img { text-align: center; margin: 20px 0; }
+.hogwarts-img img {
+  max-width: min(80%, 600px);
+  height: auto;
+  border-radius: 15px;
+  box-shadow: 0 0 20px #ffc107;
+  opacity: 1; /* no dimming */
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* =========================================================================
+   Login / Register
+   ========================================================================= */
+body.login-page {
+  background: linear-gradient(135deg, #0b1b33, #06101f);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-family: 'Cinzel Decorative', cursive;
+  color: #fceabb;
+  margin: 0;
+}
+
+.form-container {
+  background: rgba(0, 0, 0, 0.65);
+  padding: 2.5rem 3rem;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(106, 13, 173, 0.6);
+  max-width: 360px;
+  width: 100%;
+  text-align: center;
+  animation: fadeIn 1s ease-out;
+}
+
+.form-container h2 {
+  margin-bottom: 1.5rem;
+  font-size: 2rem;
+  color: var(--gold);
+  text-shadow: 0 0 8px var(--gold), 0 0 16px #c77dff;
+}
+
+.form-container form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.form-container label {
+  display: block;
+  margin: 0.75rem 0 0.25rem;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.form-container input,
+.form-container select {
+  width: 80%;
+  max-width: 320px;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 6px;
+  outline: none;
+  transition: box-shadow 0.2s ease;
+}
+.form-container input:focus,
+.form-container select:focus {
+  box-shadow: 0 0 8px var(--violet), 0 0 16px #c77dff;
+}
+
+.form-container button {
+  width: 80%;
+  max-width: 320px;
+  padding: 0.85rem;
+  margin-top: 1rem;
+  background: var(--violet);
+  color: #fff;
+  font-size: 1.1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 0 10px var(--violet);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.form-container button:hover {
+  transform: scale(1.03);
+  box-shadow: 0 0 15px #c77dff, 0 0 30px #c77dff;
+}
+
+/* =========================================================================
+   Booking Page (centered, tidy)
+   ========================================================================= */
+body.booking-page {
+  font-family: 'Cinzel Decorative', cursive;
+  color: #f0e6c8;
+  margin: 0;
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at top left, #1b2735 0%, #090a0f 50%, #03060b 100%);
+}
+
+.booking-container {
+  width: min(92vw, 520px);
+  padding: 2rem 2.5rem;
+  background: rgba(10, 10, 20, 0.85);
+  border: 2px solid var(--gold);
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(106,13,173,0.7), inset 0 0 10px rgba(255,221,87,0.4);
+  text-align: center;
+  animation: fadeIn 0.8s ease-out both;
+  position: relative;
+}
+
+.booking-container h2 {
+  font-size: 2.2rem;
+  margin-bottom: 1rem;
+  color: var(--gold);
+  text-align: center;
+  letter-spacing: .06em;
+  text-shadow: 0 0 8px var(--gold), 0 0 16px #c77dff, 0 0 24px var(--violet);
+}
+
+.booking-container form {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.form-group { margin-bottom: 1.25rem; }
+.form-group label {
+  margin-bottom: 0.5rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: .3px;
+  text-align: left;
+}
+
+.booking-container select,
+.booking-container input[type="date"] {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  background: #1a2533;
+  color: #f0e6c8;
+  box-shadow: inset 0 0 8px rgba(0,0,0,0.5);
+  transition: box-shadow .2s, transform .2s;
+}
+.booking-container select:focus,
+.booking-container input[type="date"]:focus {
+  box-shadow: inset 0 0 8px rgba(0,0,0,0.5), 0 0 8px var(--violet), 0 0 16px #c77dff;
+  transform: translateY(-2px);
+}
+
+/* Actions row */
+.booking-container .actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 8px;
+}
+.view-bookings-btn,
+.book-now-btn {
+  width: 100%;
+  margin: 0;
+}
+
+/* Submit button look */
+.book-now-btn,
+.booking-container button[type="submit"] {
+  padding: 0.85rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, var(--violet), #c77dff);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 0 10px var(--violet), 0 0 20px #c77dff;
+  transition: transform .2s, box-shadow .2s;
+}
+.book-now-btn:hover,
+.booking-container button[type="submit"]:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--gold);
+}
+
+/* Result line */
+#bookingResult {
+  margin-top: 1rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  text-shadow: 0 0 4px rgba(0,0,0,0.5);
+}
+
+/* Availability heatmap */
+.availability-grid { margin-top: 2rem; text-align: center; }
+.heatmap {
+  width: 100%;
+  max-width: 360px;
+  margin: 0 auto;
+  border-collapse: collapse;
+}
+.heatmap-slot { text-align: left; padding: .5rem; font-weight: 600; }
+.heatmap-cell {
+  width: 1.5rem; height: 1.5rem; border-radius: 4px;
+}
+.heatmap-cell.free   { background: #4dff4d; box-shadow: 0 0 5px #4dff4d; }
+.heatmap-cell.booked { background: #ff4d4d; box-shadow: 0 0 5px #ff4d4d; }
+.heatmap tr { transition: transform .1s; }
+.heatmap tr:hover { transform: scale(1.02); }
+
+/* Grey out disabled options in the dropdown */
+#timeSlot option:disabled { color: #888; }
+
+/* Logout: tiny, top-right in the card */
+#logoutBtn, .logout-button {
+  position: absolute !important;
+  top: 8px !important;
+  right: 12px !important;
+  display: inline-flex !important;
+  align-items: center;
+  gap: 6px;
+  width: auto !important;
+  min-width: 0 !important;
+  padding: 4px 10px !important;
+  font-size: 12px !important;
+  line-height: 1 !important;
+  background: transparent !important;
+  border: 1px solid rgba(255,255,255,.85) !important;
+  color: #fff !important;
+  border-radius: 6px !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  z-index: 10 !important;
+}
+#logoutBtn:hover, .logout-button:hover {
+  background: rgba(204, 0, 0, 0.85) !important;
+  border-color: #cc0000 !important;
+}
+
+/* View My Bookings (gold) */
+.view-bookings-btn {
+  background: var(--gold);
+  color: #0a0a20;
+  font-weight: 700;
+  border-radius: 8px;
+  padding: .75rem 1rem;
+  transition: background .2s;
+}
+.view-bookings-btn:hover { background: #e6c84f; }
+
+/* === STEP 2: make the gold style work perfectly on <button> too === */
+button.view-bookings-btn {
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* =========================================================================
+   Staff Dashboard (kept, even if hidden for now)
+   ========================================================================= */
+body.staff-page {
+  font-family: 'Cinzel Decorative', cursive;
+  color: #f0e6c8;
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at top left, #1b2735 0%, #090a0f 50%, #03060b 100%);
+}
+
+.staff-wrap   { max-width: 1100px; margin: 24px auto; padding: 16px; }
+.staff-topbar { display:flex; gap:12px; align-items:center; margin-bottom:16px; }
+.staff-topbar .spacer { flex:1; }
+
+.btn { background:#1f2a44; color:#fff; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; text-decoration:none; display:inline-block; }
+.btn:hover { filter: brightness(1.08); }
+.btn.danger { background:#b22222; }
+
+.cards { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px; margin:12px 0 20px; }
+.card  { background: rgba(10,10,20,0.85); border: 1px solid #333; border-radius: 12px; padding: 14px; box-shadow: 0 0 12px rgba(0,0,0,0.25); }
+.card h3 { margin: 0 0 6px; color: var(--gold); }
+
+.table-card h3 { margin:0; }
+.table-toolbar { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+
+table.table {
+  width:100%;
+  border-collapse: collapse;
+  background: rgba(6,10,20,0.6);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.table thead th {
+  text-align:left;
+  padding: 10px;
+  background:#101522;
+  color:#f0e6c8;
+  border-bottom: 1px solid #333;
+}
+.table tbody td {
+  padding: 10px;
+  border-bottom: 1px solid #333;
+}
+.table tbody tr:hover { background: rgba(255,255,255,0.03); }
+
+.pill  { display:inline-block; padding:2px 8px; border-radius:999px; background:#223; border:1px solid #334; }
+.muted { color:#bbb; }
+.hint  { font-size: .92rem; color:#9bb; margin: 8px 0 16px; }
+
+.actions { display:flex; gap:8px; }
+.inline-input { padding:6px; }
+.inline-edit  { display:flex; gap:8px; flex-wrap:wrap; }
+
+@media (max-width: 720px) {
+  .staff-wrap { padding: 12px; }
+  .cards { grid-template-columns: 1fr; }
+  .table thead { display:none; }
+  .table tbody tr { display:grid; grid-template-columns: 1fr 1fr; gap:8px; padding:10px; }
+  .table tbody td { border:none; padding:6px 0; }
+  .table tbody td:nth-child(odd) { color:#9bb; }
+}
+
+/* Small refresh button (if used) */
+.refresh-btn {
+  position: absolute !important;
+  top: 2px !important;
+  right: 25px !important;
+  display: inline-block !important;
+  width: auto !important;
+  padding: 2px 6px !important;
+  font-size: .75rem !important;
+  line-height: 1 !important;
+  background: transparent !important;
+  border: 1px solid var(--gold) !important;
+  color: var(--gold) !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  cursor: pointer !important;
+  transition: background .2s !important;
+  z-index: 9 !important;
+}
+.refresh-btn:hover { background: #e6c84f; }
+
+.availability-grid{ margin-top:1rem; text-align:center; }
+.heatmap{ width:100%; max-width:360px; margin:0 auto; border-collapse:collapse; }
+.heatmap-slot{ text-align:left; padding:.5rem; font-weight:600; }
+.heatmap-cell{ width:1.4rem; height:1.4rem; border-radius:4px; }
+.heatmap-cell.free   { background:#35e06c; box-shadow:0 0 5px #35e06c; }
+.heatmap-cell.booked { background:#e04c4c; box-shadow:0 0 5px #e04c4c; }
+
+/* =========================================================================
+   Toast (single source of truth)
+   ========================================================================= */
+/* Base toast look */
+.toast{
+  position: fixed;
+  top: 16px; right: 16px;
+  z-index: 99999;
+  background: #1f2a44;
+  color: #fff;
+  padding: .75rem 1rem;
+  border: 1px solid #ffdd57;
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0,0,0,.4);
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity .25s ease, transform .25s ease;
+  pointer-events: none;
+  font-family: 'Cinzel Decorative', cursive;
+  font-weight: 600;
+}
+.toast.show   { opacity: 1; transform: translateY(0); }
+.toast.error  { background: #b22222; border-color: #ff8080; }
+
+/* When we want it centered **below** the booking card */
+.booking-container { position: relative; }       /* ensure the card is the positioning context */
+.toast.toast--below{
+  position: absolute;                            /* now relative to .booking-container */
+  top: 100%;                                     /* just below the card */
+  left: 50%;
+  transform: translate(-50%, 8px);               /* center + small gap */
+  right: auto;                                   /* override the fixed position values */
+  bottom: auto;
+}
+.toast.toast--below.show{
+  opacity: 1;
+  transform: translate(-50%, 0);                 /* animate up a bit */
+}
+
+.status-pill {
+  display: inline-block;
+  min-width: 88px;
+  text-align: center;
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+.status-free {
+  background: #00ff7f;   /* neon green */
+  color: #04140a;
+  box-shadow: 0 0 10px #00ff7f, 0 0 20px #00ff7f; /* glow effect */
+}
+
+.status-booked {
+  background: #e74c3c;   /* vivid red */
+  color: #180909;
+  box-shadow: 0 0 10px #e74c3c, 0 0 20px #e74c3c; /* glow effect */
+}
+
+
+.heatmap {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+.heatmap th, .heatmap td {
+  padding: 6px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.heatmap th {
+  font-weight: 700;
+  color: #ffd98e;
+  text-align: left;
+}
