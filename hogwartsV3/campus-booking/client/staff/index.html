@@ -1,0 +1,235 @@
+<!--Under development for Version 4-->
+<!--c<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hogwarts Staff Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body class="staff-page">
+  <div class="staff-wrap">
+    <div class="staff-topbar">
+      <h2>🛡️ Staff Dashboard</h2>
+      <span class="pill" id="whoami"></span>
+      <div class="spacer"></div>
+      <a class="btn" href="../booking/index.html">Go to Booking</a>
+      <a class="btn" href="../booking_display/index.html">My Bookings</a>
+      <button class="btn" id="logoutBtn">Logout</button>
+    </div>
+
+    <p class="hint">
+      Use this dashboard to review all bookings, see facility usage, edit times, or cancel conflicting entries.
+    </p>
+
+    <div class="cards">
+      <div class="card">
+        <h3>Total Bookings</h3>
+        <div id="kpiTotal" class="muted">—</div>
+      </div>
+      <div class="card">
+        <h3>Bookings by Facility</h3>
+        <div id="kpiByFacility" class="muted">—</div>
+      </div>
+    </div>
+
+    <div class="card table-card">
+      <div class="table-toolbar">
+        <h3>All Bookings</h3>
+        <button class="btn" id="refreshBtn">Refresh</button>
+      </div>
+      <table id="allBookings" class="table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Hogwarts ID</th>
+            <th>Facility</th>
+            <th>Date</th>
+            <th>Time Slot</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const API = ''; 
+
+   
+    function requireStaff() {
+      const id   = localStorage.getItem('hogwartsId');
+      const role = localStorage.getItem('role');
+      if (!id || !role) {
+        window.location.href = '../login/index.html';
+        return null;
+      }
+      if (!['admin','staff'].includes(role)) {
+        window.location.href = '../booking/index.html';
+        return null;
+      }
+      return { id, role };
+    }
+
+   
+    function el(sel, root=document){ return root.querySelector(sel); }
+    function fmtStats(rows){
+      if (!Array.isArray(rows) || rows.length===0) return '—';
+      return rows.map(r => `${r.facility}: ${r.count}`).join('  •  ');
+    }
+
+    function rowView(b) {
+      const tr = document.createElement('tr');
+      tr.dataset.id = b.id;
+      tr.innerHTML = `
+        <td>${b.id}</td>
+        <td>${b.hogwartsId}</td>
+        <td>${b.facility}</td>
+        <td>${b.date}</td>
+        <td>${b.timeSlot}</td>
+        <td class="actions">
+          <button class="btn" data-act="edit">Edit</button>
+          <button class="btn danger" data-act="delete">Cancel</button>
+        </td>
+      `;
+      tr.addEventListener('click', (e)=>{
+        const act = e.target?.dataset?.act;
+        if (!act) return;
+        if (act === 'delete') return onDelete(b.id);
+        if (act === 'edit')   return switchToEdit(tr, b);
+      });
+      return tr;
+    }
+
+    function switchToEdit(tr, b) {
+      const editTr = document.createElement('tr');
+      editTr.dataset.id = b.id;
+      const timeOptions = [
+        "08:00-09:00","09:00-10:00","10:00-11:00","11:00-12:00",
+        "13:00-14:00","14:00-15:00","15:00-16:00","16:00-17:00",
+        "17:00-18:00","18:00-19:00","19:00-20:00","20:00-21:00","21:00-22:00"
+      ].map(s => `<option ${s===b.timeSlot?'selected':''}>${s}</option>`).join('');
+
+      editTr.innerHTML = `
+        <td>${b.id}</td>
+        <td>${b.hogwartsId}</td>
+        <td>
+          <select id="editFacility" class="inline-input">
+            <option ${b.facility==='badminton'?'selected':''} value="badminton">badminton</option>
+            <option ${b.facility==='swimming'?'selected':''}  value="swimming">swimming</option>
+            <option ${b.facility==='gym'?'selected':''}       value="gym">gym</option>
+            <option ${b.facility==='classroomA'?'selected':''} value="classroomA">classroomA</option>
+            <option ${b.facility==='classroomB'?'selected':''} value="classroomB">classroomB</option>
+            <option ${b.facility==='classroomC'?'selected':''} value="classroomC">classroomC</option>
+            <option ${b.facility==='classroomD'?'selected':''} value="classroomD">classroomD</option>
+          </select>
+        </td>
+        <td><input id="editDate" type="date" value="${b.date}" /></td>
+        <td>
+          <select id="editTime">${timeOptions}</select>
+        </td>
+        <td class="actions">
+          <button class="btn" data-act="save">Save</button>
+          <button class="btn danger" data-act="cancelEdit">Cancel</button>
+        </td>
+      `;
+      tr.replaceWith(editTr);
+
+      editTr.addEventListener('click', (e)=>{
+        const act = e.target?.dataset?.act;
+        if (!act) return;
+        if (act === 'cancelEdit') {
+          editTr.replaceWith(rowView(b));
+        }
+        if (act === 'save') {
+          const payload = {
+            facility: el('#editFacility', editTr).value,
+            date:     el('#editDate', editTr).value,
+            timeSlot: el('#editTime', editTr).value
+          };
+          onSave(b.id, payload, ()=>{
+            editTr.replaceWith(rowView({ ...b, ...payload }));
+          }, (errMsg)=>{
+            alert(errMsg || 'Failed to save');
+          });
+        }
+      });
+    }
+
+    async function fetchTotal() {
+      const r = await fetch(`${API}/api/booking-count`);
+      if (!r.ok) throw new Error('count failed');
+      return (await r.json()).count;
+    }
+    async function fetchStats() {
+      const r = await fetch(`${API}/api/booking-stats`);
+      if (!r.ok) throw new Error('stats failed');
+      return await r.json();
+    }
+    async function fetchAll() {
+      const r = await fetch(`${API}/api/bookings`);
+      if (!r.ok) throw new Error('list failed');
+      return await r.json();
+    }
+    async function onDelete(id) {
+      if (!confirm('Cancel this booking?')) return;
+      const r = await fetch(`${API}/api/book/${id}`, { method:'DELETE' });
+      if (!r.ok) {
+        alert('Delete failed');
+        return;
+      }
+      loadAll();
+    }
+    async function onSave(id, {facility, date, timeSlot}, ok, bad) {
+      const r = await fetch(`${API}/api/book/${id}`, {
+        method:'PUT',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ facility, date, timeSlot })
+      });
+      const payload = await r.json().catch(()=> ({}));
+      if (r.status === 409) return bad('New time slot already booked.');
+      if (!r.ok) return bad(payload?.error || 'Update failed');
+      ok();
+      loadKPIs();
+    }
+
+    async function loadKPIs() {
+      try {
+        const [total, stats] = await Promise.all([fetchTotal(), fetchStats()]);
+        el('#kpiTotal').textContent = total;
+        el('#kpiByFacility').textContent = fmtStats(stats);
+      } catch (e) {
+        el('#kpiTotal').textContent = '—';
+        el('#kpiByFacility').textContent = '—';
+      }
+    }
+    async function loadAll() {
+      try {
+        const rows = await fetchAll();
+        const tbody = el('#allBookings tbody');
+        tbody.innerHTML = '';
+        (rows || []).forEach(b => tbody.appendChild(rowView(b)));
+      } catch (e) {
+        const tbody = el('#allBookings tbody');
+        tbody.innerHTML = '<tr><td colspan="6">Failed to load bookings.</td></tr>';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', ()=>{
+      const who = requireStaff();
+      if (!who) return;
+      el('#whoami').textContent = `Logged in: ${who.id} (${who.role})`;
+      el('#logoutBtn').addEventListener('click', ()=>{
+        localStorage.clear();
+        window.location.href = '../login/index.html';
+      });
+      el('#refreshBtn').addEventListener('click', loadAll);
+
+      loadKPIs();
+      loadAll();
+    });
+  </script>
+</body>
+</html>-->
