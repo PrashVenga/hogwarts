@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Book a Facility | Hogwarts</title>
+
+  <!-- Reduce cached back-nav after logout -->
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../style.css" />
+
+  <style>
+    /* Hide legacy grid (chips/heatmap replaces it) */
+    #availabilityGrid { display:none; }
+
+    /* Hide the select but keep it accessible to JS */
+    .visually-hidden {
+      position:absolute !important;
+      width:1px !important;
+      height:1px !important;
+      margin:-1px !important;
+      padding:0 !important;
+      border:0 !important;
+      clip:rect(0 0 0 0) !important;
+      overflow:hidden !important;
+      white-space:nowrap !important;
+    }
+
+    /* Legend dots */
+    .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+    .dot.free{background:#34d058}
+    .dot.booked{background:#e5534b}
+    .dot.blocked{background:#6b7fb3}
+
+    /* Chips header/legend */
+    .hm-wrap{margin-top:10px}
+    .hm-meta{font-size:.85rem;letter-spacing:.06em;opacity:.9;margin-bottom:.35rem;text-align:center}
+    .hm-legend{display:flex;gap:14px;justify-content:center;align-items:center;margin:.35rem 0 .6rem}
+
+    /* Chips grid (flex so last row centers) */
+    #hmGrid{
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:center;
+      gap:12px 14px;
+      max-width:640px;
+      margin:0 auto 8px;
+    }
+    #hmGrid .hm-slot{
+      display:flex; align-items:center; justify-content:center;
+      height:44px; flex:0 1 180px;
+      border-radius:12px;
+      font:600 .9rem/1.1 "Cinzel Decorative", serif;
+      letter-spacing:.02em;
+      border:1px solid transparent;
+      box-shadow:0 0 10px rgba(0,0,0,.25);
+      user-select:none;
+      transition:transform .06s,box-shadow .2s,filter .2s,border-color .2s;
+      cursor:default; white-space:nowrap;
+    }
+    #hmGrid .hm-slot:hover{transform:translateY(-1px)}
+    #hmGrid .hm-slot.free{
+      cursor:pointer;color:#0a1b0f;
+      background:linear-gradient(180deg,#72ff9e,#34d058);
+      border-color:#1ba34a;
+      box-shadow:0 0 12px rgba(50,205,50,.35);
+    }
+    #hmGrid .hm-slot.booked{
+      color:#2b0b0b;background:linear-gradient(180deg,#ff9a9a,#e5534b);
+      border-color:#b7372f;box-shadow:0 0 12px rgba(229,83,75,.35)
+    }
+    #hmGrid .hm-slot.blocked{
+      color:#e3ebff;background:linear-gradient(180deg,#334264,#6b7fb3);
+      border-color:#4b5b84;box-shadow:0 0 12px rgba(107,127,179,.35)
+    }
+    #hmGrid .hm-slot.free.selected{
+      outline:2px solid #ffd86b;box-shadow:0 0 16px rgba(255,216,107,.55),0 0 24px rgba(255,216,107,.35)
+    }
+
+    @media (max-width:720px){ #hmGrid .hm-slot{ flex-basis:calc(50% - 14px) } }
+    @media (max-width:420px){ #hmGrid .hm-slot{ flex-basis:100% } }
+
+    /* Keep NEW legend; hide any old one */
+    .booking-page .hm-legend{display:flex!important}
+    .booking-page #availabilityGrid + .legend,
+    .booking-page #availabilityGrid ~ .legend,
+    .booking-page .booking-container > .legend{display:none!important}
+
+    #hmGrid .hm-slot.booked,
+#hmGrid .hm-slot.blocked { cursor: pointer; }
+
+  </style>
+
+  <!-- Page logic (availability + booking) -->
+  <script defer src="./script.js"></script>
+</head>
+
+<body class="booking-page">
+  <!-- toast -->
+  <div id="toast" class="toast" aria-live="polite"></div>
+
+  <div class="booking-container">
+    <button id="logoutBtn" class="logout-btn" type="button">Logout</button>
+
+    <h2>📚 Book a Facility</h2>
+
+    <form id="bookingForm" autocomplete="off" novalidate>
+      <div class="form-group">
+        <label for="facility">Select Facility:</label>
+        <select id="facility">
+          <option value="">— Select Facility —</option>
+          <option>Badminton Court</option>
+          <option>Swimming Pool</option>
+          <option>Gym</option>
+          <option>Classroom 1</option>
+          <option>Classroom 2</option>
+          <option>Classroom 3</option>
+          <option>Classroom 4</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="date">Select Date:</label>
+        <input type="date" id="date" required />
+      </div>
+
+      <!-- Heatmap (reads & updates #timeSlot) -->
+      <div id="heatmapBox" class="hm-wrap" hidden>
+        <div class="hm-meta" id="hmMeta">AVAILABLE • BOOKED • BLOCKED</div>
+        <div class="hm-legend">
+          <span><i class="dot free"></i> Available</span>
+          <span><i class="dot booked"></i> Booked</span>
+          <span><i class="dot blocked"></i> Blocked</span>
+        </div>
+        <div id="hmGrid"></div>
+      </div>
+
+      <!-- Legacy grid (kept for compatibility, hidden by CSS) -->
+      <div id="availabilityGrid" class="availability-grid"></div>
+
+      <!-- Hidden select that drives the chips (script.js will overwrite options) -->
+      <div class="form-group" style="margin-top:6px">
+        <label for="timeSlot">Select Time Slot:</label>
+        <select id="timeSlot" class="visually-hidden">
+          <option value="">— Select Time Slot —</option>
+          <option value="08:00-09:00">08:00 – 09:00</option>
+          <option value="09:00-10:00">09:00 – 10:00</option>
+          <option value="10:00-11:00">10:00 – 11:00</option>
+          <option value="11:00-12:00">11:00 – 12:00</option>
+          <option value="12:00-13:00">12:00 – 13:00</option>
+          <option value="13:00-14:00">13:00 – 14:00</option>
+          <option value="14:00-15:00">14:00 – 15:00</option>
+          <option value="15:00-16:00">15:00 – 16:00</option>
+          <option value="16:00-17:00">16:00 – 17:00</option>
+          <option value="17:00-18:00">17:00 – 18:00</option>
+          <option value="18:00-19:00">18:00 – 19:00</option>
+          <option value="19:00-20:00">19:00 – 20:00</option>
+          <option value="20:00-21:00">20:00 – 21:00</option>
+          <option value="21:00-22:00">21:00 – 22:00</option>
+        </select>
+      </div>
+
+      <div class="actions">
+        <a href="/booking_display" class="view-bookings-btn">View My Bookings</a>
+        <button type="button" id="bookBtn" class="book-now-btn">Book Now</button>
+      </div>
+    </form>
+
+    <div id="bookingResult" aria-live="polite" style="margin-top:10px"></div>
+  </div>
+
+  <!-- Success / info modal (used by script.js showModal) -->
+  <div id="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center">
+    <div style="width:min(520px,92vw);background:#0b0f1a;color:#f0e6c8;border:1px solid rgba(255,221,87,.35);border-radius:12px;box-shadow:0 10px 28px rgba(0,0,0,.55)">
+      <div style="padding:12px 14px;border-bottom:1px solid rgba(255,221,87,.18);display:flex;justify-content:space-between;align-items:center">
+        <h4 id="modalTitle" style="margin:0;letter-spacing:.08em">Booking confirmed</h4>
+        <button id="modalClose" style="all:unset;cursor:pointer;padding:6px 8px;border-radius:6px;background:linear-gradient(180deg,#ffe98f,#ffdd57);color:#111;font-weight:700">Close</button>
+      </div>
+      <div id="modalBody" style="padding:14px"></div>
+    </div>
+  </div>
+
+  <!-- Date min = today -->
+  <script>
+    function todayLocalISO(){
+      const d=new Date();
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+    document.addEventListener('DOMContentLoaded', ()=>{
+      const dateEl=document.getElementById('date');
+      if(!dateEl) return;
+      const today=todayLocalISO();
+      dateEl.min=today;
+      if(!dateEl.value || dateEl.value<today){
+        dateEl.value=today;
+        dateEl.dispatchEvent(new Event('change',{bubbles:true}));
+      }
+    });
+  </script>
+
+  <!-- Disable past slots if date === today -->
+  <script>
+    function todayISO(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+    function toMinutes(hhmm){ const [h,m]=hhmm.split(':').map(Number); return h*60+m; }
+    function refreshPastSlots(){
+      const dateEl=document.getElementById('date');
+      const slotEl=document.getElementById('timeSlot');
+      if(!dateEl||!slotEl) return;
+      // reset any "past" disables we applied
+      [...slotEl.options].forEach(o=>{ if(o.dataset.reason==='past'){ o.disabled=false; delete o.dataset.reason; }});
+      if(dateEl.value!==todayISO()) return;
+      // disable slots that have already started today
+      const now=new Date(), nowMin=now.getHours()*60+now.getMinutes();
+      [...slotEl.options].forEach(o=>{
+        if(!o.value) return;
+        const start=(o.value.split('-')[0]||'').slice(0,5); // handle HH:MM:SS
+        if(toMinutes(start)<=nowMin){ o.disabled=true; o.dataset.reason='past'; }
+      });
+      if(slotEl.selectedOptions[0]?.disabled) slotEl.value='';
+    }
+    document.addEventListener('DOMContentLoaded', ()=>{
+      refreshPastSlots();
+      const dateEl=document.getElementById('date');
+      if(dateEl) dateEl.addEventListener('change', refreshPastSlots);
+      setInterval(()=>{ if(dateEl && dateEl.value===todayISO()) refreshPastSlots(); }, 60000);
+    });
+  </script>
+
+  <!-- Toast helper (optional) -->
+  <script>
+    function showToast(message,isError=false,opts={}){
+      const placeBelow = opts.placement==='below';
+      let el=document.getElementById('toast');
+      if(!el){ el=document.createElement('div'); el.id='toast'; el.className='toast'; }
+      if(placeBelow){
+        const host=document.querySelector('.booking-container')||document.body;
+        if(el.parentElement!==host) host.appendChild(el);
+        el.classList.add('toast--below');
+      }else{
+        if(el.parentElement!==document.body) document.body.appendChild(el);
+        el.classList.remove('toast--below');
+      }
+      el.textContent=message;
+      el.classList.toggle('error', !!isError);
+      document.body.offsetWidth; /* reflow */
+      el.classList.add('show');
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer=setTimeout(()=>el.classList.remove('show'),2000);
+    }
+  </script>
+
+  <!-- Auth + logout -->
+  <script>
+    (function authGate(){
+      const id=localStorage.getItem('hogwartsId');
+      const role=(localStorage.getItem('role')||'').toLowerCase();
+      if(!id || !role) location.replace('/login');
+      window.addEventListener('pageshow',(e)=>{
+        if(e.persisted && (!localStorage.getItem('hogwartsId') || !localStorage.getItem('role'))){
+          location.replace('/login');
+        }
+      });
+    })();
+    (function wireLogout(){
+      const btn=document.getElementById('logoutBtn');
+      if(!btn) return;
+      btn.addEventListener('click', async (e)=>{
+        e.preventDefault();
+        try{ await fetch('/api/auth/logout',{method:'POST'}).catch(()=>{}); } finally {
+          localStorage.clear(); sessionStorage.clear();
+          if('caches' in window){ caches.keys().then(keys=>keys.forEach(k=>caches.delete(k))); }
+          location.replace('/login');
+        }
+      });
+    })();
+  </script>
+
+ <!-- Heatmap painter that reads from #timeSlot and shows DD-MM-YYYY -->
+<script>
+(() => {
+  const $ = (s,r=document)=>r.querySelector(s);
+
+  function readSlotsFromSelect(sel){
+    const slots=[];
+    [...sel.options].forEach(o=>{
+      if(!o.value) return;
+      // trust data-state set by script.js (do NOT infer from disabled)
+      const state = o.dataset.state || 'free';
+      slots.push({ label:o.text.trim(), value:o.value, state });
+    });
+    return slots;
+  }
+
+  function ymdToDMY(ymd){
+    const [y,m,d]=(ymd||'').split('-');
+    return (y&&m&&d)?`${d}-${m}-${y}`:'';
+  }
+
+  function paintHeatmap(){
+    const sel  = $('#timeSlot'),
+          box  = $('#heatmapBox'),
+          grid = $('#hmGrid'),
+          meta = $('#hmMeta');
+    if(!sel || !grid || !box) return;
+
+    const slots = readSlotsFromSelect(sel);
+    if(!slots.length){ box.hidden=true; grid.innerHTML=''; return; }
+
+    const c={free:0,booked:0,blocked:0};
+    slots.forEach(s=>{ if(c[s.state]!=null) c[s.state]++; });
+
+    const dmy = ymdToDMY(document.getElementById('date')?.value || '');
+    if (meta) meta.textContent = `${dmy ? dmy + ' • ' : ''}AVAILABLE ${c.free} • BOOKED ${c.booked} • BLOCKED ${c.blocked}`;
+
+    grid.innerHTML='';
+    slots.forEach(s=>{
+      const btn=document.createElement('button');
+      btn.type='button';
+      btn.className=`hm-slot ${s.state}${sel.value && s.value===sel.value ? ' selected' : ''}`;
+      btn.textContent=s.label;
+
+      // ✅ Allow selecting ANY state (free/booked/blocked)
+      btn.addEventListener('click', ()=>{
+        grid.querySelectorAll('.hm-slot.selected').forEach(n=>n.classList.remove('selected'));
+        btn.classList.add('selected');
+
+        // set select value even if the matching <option> was marked booked/blocked
+        sel.value = s.value;
+
+        // ensure option carries state for bookNow()
+        const opt = [...sel.options].find(o=>o.value===s.value);
+        if (opt) opt.dataset.state = s.state;
+
+        // let outer code react (enables Book Now in your script)
+        sel.dispatchEvent(new Event('change', { bubbles:true }));
+      });
+
+      grid.appendChild(btn);
+    });
+
+    // Do NOT auto-select anything here.
+    box.hidden=false;
+  }
+
+  const sel=document.getElementById('timeSlot');
+  if(sel){
+    document.addEventListener('DOMContentLoaded', paintHeatmap);
+    new MutationObserver(paintHeatmap).observe(sel,{childList:true,attributes:true,subtree:true});
+    window.paintHeatmap = window.paintHeatmap || paintHeatmap;
+  }
+})();
+</script>
+
+
+</body>
+</html>
