@@ -1,0 +1,489 @@
+/* Base styling */
+body {
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 30px;
+  background: linear-gradient(to right, #1b2735, #090a0f);
+  color: #fceabb;
+  min-height: 100vh;
+}
+
+/* Header */
+h1 {
+  font-size: 3em;
+  text-align: center;
+  color: #ffdd57;
+  text-shadow: 0 0 10px #ffdd57, 0 0 20px #ffd700;
+}
+
+/* Paragraph */
+p {
+  font-size: 1.2em;
+  line-height: 1.6;
+  max-width: 800px;
+  margin: 0 auto 20px;
+  text-align: center;
+}
+
+/* Link button */
+a {
+  display: inline-block;
+  background: #6a0dad;
+  color: #fff;
+  padding: 12px 24px;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 1.1em;
+  text-align: center;
+  margin: 30px auto 0;
+  box-shadow: 0 0 10px #6a0dad, 0 0 20px #6a0dad;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: block;
+  width: fit-content;
+  margin: 30px auto 0;
+}
+
+a:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px #c77dff, 0 0 30px #c77dff;
+}
+
+.hogwarts-img {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.hogwarts-img img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 15px;
+  box-shadow: 0 0 20px #ffc107;
+}
+
+.hogwarts-img img {
+  max-width: 80%;    /* scale image to at most 80% of its container’s width */
+  width: 600px;      /* or pick a fixed width that you like */
+  height: auto;      /* preserve aspect ratio */
+  border-radius: 15px;
+  box-shadow: 0 0 20px #ffc107;
+  opacity: 0.5;
+}
+
+/* ==== Login Page Styles ==== */
+body.login-page {
+  background: linear-gradient(135deg, #0b1b33, #06101f);
+  font-family: 'Cinzel Decorative', cursive;
+  color: #fceabb;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+
+
+.form-container {
+  background: rgba(0, 0, 0, 0.65);
+  padding: 2.5rem 3rem;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(106, 13, 173, 0.6);
+  max-width: 360px;
+  width: 100%;
+  text-align: center;
+  animation: fadeIn 1s ease-out;
+  margin: 80px auto; /* ⬅ centers horizontally and pushes form down */
+}
+
+
+.form-container h2 {
+  margin-bottom: 1.5rem;
+  font-size: 2rem;
+  color: #ffdd57;
+  text-shadow: 0 0 8px #ffdd57, 0 0 16px #c77dff;
+}
+
+.form-container label {
+  display: block;
+  margin: 0.75rem 0 0.25rem;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.form-container input {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 6px;
+  outline: none;
+  transition: box-shadow 0.2s ease;
+}
+
+.form-container input:focus {
+  box-shadow: 0 0 8px #6a0dad, 0 0 16px #c77dff;
+}
+
+.form-container button {
+  width: 100%;
+  padding: 0.85rem;
+  background: #6a0dad;
+  color: #fff;
+  font-size: 1.1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 0 10px #6a0dad;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-container button:hover {
+  transform: scale(1.03);
+  box-shadow: 0 0 15px #c77dff, 0 0 30px #c77dff;
+}
+
+/* Simple fade-in animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Center the form elements */
+.form-container form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;    /* center children horizontally */
+  text-align: center;      /* center label text */
+}
+
+/* Make inputs and button a fixed width, centered */
+.form-container input,
+.form-container button {
+  width: 80%;              /* 80% of the container’s width */
+  max-width: 320px;        /* but never wider than 320px */
+  margin: 0.5rem 0;        /* vertical spacing, auto horizontal */
+}
+
+/* Add a bit more top margin on the button */
+.form-container button {
+  margin-top: 1rem;
+}
+
+/* ==== Booking Page: Centralized & Magical ==== */
+
+body.booking-page {
+  font-family: 'Cinzel Decorative', cursive;
+  color: #f0e6c8;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at top left,
+              #1b2735 0%, #090a0f 50%, #03060b 100%);
+}
+
+.booking-container {
+  width: 90%;
+  max-width: 500px;
+  padding: 2rem 2.5rem;
+  background: rgba(10, 10, 20, 0.85);
+  border: 2px solid #ffdd57;
+  border-radius: 12px;
+  box-shadow:
+    0 0 15px rgba(106,13,173,0.7),
+    inset 0 0 10px rgba(255,221,87,0.4);
+  text-align: center;
+  animation: fadeIn 0.8s ease-out both;
+}
+
+.booking-container h2 {
+  font-size: 2.4rem;
+  margin-bottom: 1rem;
+  color: #ffdd57;
+  text-shadow:
+    0 0 8px #ffdd57,
+    0 0 16px #c77dff,
+    0 0 24px #6a0dad;
+}
+
+.booking-container form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.booking-container label {
+  display: block;
+  margin: 1rem 0 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.booking-container select,
+.booking-container input[type="date"] {
+  width: 100%;
+  max-width: 360px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  background: #1a2533;
+  color: #f0e6c8;
+  box-shadow: inset 0 0 8px rgba(0,0,0,0.5);
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.booking-container select:focus,
+.booking-container input[type="date"]:focus {
+  box-shadow:
+    inset 0 0 8px rgba(0,0,0,0.5),
+    0 0 8px #6a0dad,
+    0 0 16px #c77dff;
+  transform: translateY(-2px);
+}
+
+.booking-container button {
+  width: 100%;
+  max-width: 360px;
+  margin-top: 1.5rem;
+  padding: 0.85rem;
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #fff;
+  background: linear-gradient(135deg, #6a0dad, #c77dff);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow:
+    0 0 10px #6a0dad,
+    0 0 20px #c77dff;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.booking-container button:hover {
+  transform: scale(1.05);
+  box-shadow:
+    0 0 15px #ffdd57,
+    0 0 30px #ffdd57;
+}
+
+#bookingResult {
+  margin-top: 1rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-shadow: 0 0 4px rgba(0,0,0,0.5);
+}
+
+/* Fade-in */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.booking-container form {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;      /* make all fields full-width */
+}
+
+.form-group {
+  margin-bottom: 1.25rem;     /* space between rows */
+}
+
+/* Make labels stand above their fields */
+.form-group label {
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+  text-align: left;
+}
+
+/* Stretch inputs & selects to full container width */
+.form-group select,
+.form-group input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Center the submit button but keep its max‐width */
+.form-group button {
+  width: auto;
+  align-self: center;
+  padding: 0.85rem 2rem;
+}
+
+
+/**************************************Style availability grid******************************************/
+
+.availability-grid {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.heatmap {
+  width: 100%;
+  max-width: 360px;
+  margin: 0 auto;
+  border-collapse: collapse;
+}
+
+.heatmap-slot {
+  text-align: left;
+  padding: 0.5rem;
+  font-weight: 600;
+}
+
+.heatmap-cell {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 4px;
+}
+
+.heatmap-cell.free {
+  background: #4dff4d;   /* green = available */
+  box-shadow: 0 0 5px #4dff4d;
+}
+
+.heatmap-cell.booked {
+  background: #ff4d4d;   /* red = booked */
+  box-shadow: 0 0 5px #ff4d4d;
+}
+
+.heatmap tr {
+  transition: transform 0.1s;
+}
+
+.heatmap tr:hover {
+  transform: scale(1.02);
+}
+
+
+/***********************Red-ing booked Slot******************************/
+
+#timeSlot option:disabled {
+  color: #888;
+}
+
+/*****************************Logout Button*******************************************************/
+
+/* Small logout button fixed to the top‐right of the viewport */
+.logout-button {
+  /* Pin it to the viewport corner */
+  position: fixed !important;
+  top: 1px !important; /* ↓ distance from the **top** of the screen */
+  right: 16px !important; /* ← distance from the **right** of the screen */
+  z-index: 9999 !important;
+
+  /* Auto-size, no inherited full-width or big padding */
+  width: auto !important;
+  min-width: 0 !important;
+  padding: 0.25rem 0.5rem !important;
+  font-size: 0.8rem !important;
+  line-height: 1 !important;
+
+  /* A slim border, transparent background */
+  background: transparent !important;
+  border: 1px solid rgba(255,255,255,0.8) !important;
+  color: #ffffff !important;
+
+  /* Remove big shadows or rounded madness */
+  box-shadow: none !important;
+  text-shadow: none !important;
+  border-radius: 4px !important;
+
+  cursor: pointer !important;
+  transition: background 0.2s !important;
+}
+
+.logout-button:hover {
+  background: rgba(204, 0, 0, 0.85) !important;  /* deep red with some transparency */
+  border-color: #cc0000 !important;               /* matching solid border */
+  color: #fff !important;                         /* white text for contrast */
+}
+
+/***********************************View Booking Button*******************************************/
+
+
+.view-bookings-btn {
+  display: inline-block;        /* keeps it sized to its content */
+  margin-bottom: 1rem;          /* space below the button */
+  padding: 0.4rem 0.8rem;       /* vertical / horizontal padding */
+  background: #ffdd57;          /* your golden yellow */
+  color: #0a0a20;               /* dark text */
+  font-weight: bold;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+/* Hover state */
+.view-bookings-btn:hover {
+  background: #e6c84f;
+}
+
+
+/* =========================================================================
+   Tiny top-right Refresh button override
+   ========================================================================= */
+.refresh-btn {
+  /* pin to top-right inside the container */
+  position: absolute !important;
+  top:    2px      !important;  /* 8px down */
+  right:  25px      !important;  /* 8px in from the right */
+
+  /* make it small & inline */
+  display: inline-block !important;
+  width:   auto    !important;
+  padding: 2px 6px !important;  /* tiny padding */
+  font-size: 0.75rem !important;/* small text */
+  line-height: 1   !important;  /* no extra height */
+
+  /* reset all the big-button visuals */
+  background: transparent !important;
+  border: 1px solid #ffdd57 !important;  /* match your theme */
+  color: #ffdd57    !important;
+  box-shadow: none  !important;
+  text-shadow: none !important;
+  border-radius: 4px !important;
+
+  cursor: pointer   !important;
+  transition: background 0.2s !important;
+  z-index: 999      !important;
+}
+.refresh-btn:hover {
+  background: rgba(255,221,87,0.1) !important;
+}
+
+
+/* Navigation Bar Fix */
+nav {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+nav a {
+  display: inline-block !important;
+  margin: 0 !important;
+  width: auto !important;
+  padding: 10px 20px;
+  background: #6a0dad;
+  color: white;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: bold;
+  box-shadow: 0 0 10px #6a0dad;
+  transition: background 0.3s ease, transform 0.3s ease;
+}
+
+nav a:hover {
+  background: #3700b3;
+  transform: scale(1.05);
+  box-shadow: 0 0 15px #c77dff, 0 0 30px #c77dff;
+}
+

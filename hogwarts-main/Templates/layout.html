@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Hogwarts{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="{% block body_class %}{% endblock %}">
+    <header>
+        <h1>Hogwarts Academy Booking Services</h1>
+        <nav>
+            <a href="/">Home</a>
+
+            {% if 'username' not in session %}
+                <a href="/login">Login</a>
+                <a href="/register">Register</a>
+            {% else %}
+                <a href="/booking">Booking</a>
+                <a href="/logout">Logout</a>
+            {% endif %}
+        </nav>
+    </header>
+
+    {% block content %}{% endblock %}
+</body>
+</html>
+
+
+
