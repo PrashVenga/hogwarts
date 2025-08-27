@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hogwarts Admin Dashboard</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../style.css">
+
+  <style>
+  body.admin-page .frame a{background:transparent;box-shadow:none;display:inline;margin:0;padding:0;border:0;text-decoration:none;color:inherit}
+  body.admin-page .hero #logoutBtn,
+  body.admin-page .hero #refreshTop,
+  body.admin-page .hero #refresh{
+    all:unset;position:absolute;top:-12px;padding:4px 10px;font:700 .78rem/1 "Cinzel Decorative",serif;color:#111;
+    background:linear-gradient(180deg,#ffe98f,#ffdd57);border:1px solid #ffdd57;border-radius:6px;box-shadow:0 0 10px rgba(255,221,87,.35);cursor:pointer
+  }
+  body.admin-page .hero #logoutBtn{left:8px}
+  body.admin-page .hero #refreshTop, body.admin-page .hero #refresh{right:8px}
+  body.admin-page .hero #logoutBtn:hover,
+  body.admin-page .hero #refreshTop:hover,
+  body.admin-page .hero #refresh:hover{transform:translateY(-1px);box-shadow:0 0 18px rgba(255,221,87,.55)}
+
+  .frame .hero #logoutBtn,.frame .hero #refresh,.frame .hero #refreshTop{
+    all:unset;position:absolute;top:-12px;padding:4px 10px;font:700 .78rem/1 "Cinzel Decorative",serif;color:#111;
+    background:linear-gradient(180deg,#ffe98f,#ffdd57);border:1px solid #ffdd57;border-radius:6px;box-shadow:0 0 10px rgba(255,221,87,.35);cursor:pointer
+  }
+  .frame .hero #logoutBtn{left:8px;right:auto}
+  .frame .hero #refresh,.frame .hero #refreshTop{right:8px;left:auto}
+  .frame .hero #logoutBtn:hover,.frame .hero #refresh:hover,.frame .hero #refreshTop:hover{transform:translateY(-1px);box-shadow:0 0 18px rgba(255,221,87,.55)}
+
+  body.admin-page{margin:0;padding:28px 16px;min-height:100vh;background:radial-gradient(circle at 25% -20%,#1b2735 0%,#090a0f 55%,#03060b 100%);color:#f0e6c8;font-family:"Cinzel Decorative",serif}
+  .dash{max-width:1200px;margin:0 auto}
+  .frame{border:1.5px solid rgba(255,221,87,.65);border-radius:10px;background:rgba(5,7,14,.9);box-shadow:0 0 0 1px rgba(255,221,87,.18) inset,0 8px 24px rgba(0,0,0,.5),0 0 26px rgba(199,125,255,.2);padding:18px}
+  .hero{position:relative;padding:8px 0 16px;border-bottom:1px solid rgba(255,221,87,.18);margin-bottom:12px}
+  .admin-title{margin:0;text-align:center;letter-spacing:.12em;text-transform:uppercase;color:#f8f0d2;text-shadow:0 0 10px rgba(255,221,87,.35)}
+  .top-pill{position:absolute;top:-12px;padding:4px 10px;border-radius:6px;font:700 .78rem/1 "Cinzel Decorative",serif;color:#111;background:linear-gradient(180deg,#ffe98f,#ffdd57);border:1px solid #ffdd57;box-shadow:0 0 10px rgba(255,221,87,.35);cursor:pointer}
+  #logoutBtn{left:8px} #refresh{right:8px}
+  .top-pill:hover{transform:translateY(-1px);box-shadow:0 0 18px rgba(255,221,87,.55)}
+  .nav-row{display:flex;gap:14px;justify-content:center;margin:10px 0 12px}
+  .nav-btn{min-width:320px;padding:10px 14px;text-align:center;text-decoration:none;font-weight:700;letter-spacing:.04em;color:#0a0a20;background:linear-gradient(180deg,#ffe98f,#ffdd57);border:1px solid #ffdd57;border-radius:8px;box-shadow:0 0 14px rgba(255,221,87,.35)}
+  .nav-btn:hover{transform:translateY(-1px);box-shadow:0 0 20px rgba(255,221,87,.55)}
+  .who{display:flex;justify-content:center;margin:0 0 8px}
+  .who .pill{padding:6px 10px;border:1px solid #ffdd57;border-radius:999px;background:rgba(255,221,87,.12);font-weight:600}
+
+  .card{background:rgba(8,10,18,.92);border:1px solid rgba(255,221,87,.25);border-radius:10px;padding:12px 14px;margin-top:14px}
+  .card h3{margin:0 0 10px;letter-spacing:.12em;color:#ffeaa0}
+  .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:10px}
+  .kpi{background:rgba(8,10,18,.92);border:1px solid rgba(255,221,87,.25);border-radius:10px;padding:12px 14px;text-align:center}
+  .kpi h4{margin:0 0 6px;color:#ffeaa0;letter-spacing:.08em}
+  .chart-wrap{display:grid;place-items:center}
+  .kpis .kpi:nth-child(3) .chart-wrap{
+  display:flex !important;          
+  justify-content:center !important;
+  align-items:center !important;
+  width:100%;
+  }
+  table{width:100%;border-collapse:collapse}
+  thead th{background:#0f1730;color:#f0e6c8;letter-spacing:.08em;text-align:left}
+  th,td{padding:.6rem .65rem;border-bottom:1px solid rgba(255,255,255,.08)}
+  tbody tr:hover{background:rgba(255,255,255,.03)}
+  .legend{display:flex;gap:14px;align-items:center;font-size:.92rem;margin-top:8px}
+  .legend .dot{width:10px;height:10px;border-radius:50%}
+  .legend .booked{background:#c0392b}.legend .blocked{background:#7a8bb3}
+
+  #blocksSection{max-width:880px;margin:16px auto 0}
+  .blocks-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:end;margin-bottom:10px}
+  .field{display:flex;flex-direction:column;gap:.35rem}
+  .field label{font-size:.85rem;letter-spacing:.06em;opacity:.92}
+  #blocksSection select,#blocksSection input,#blocksSection textarea{background:#0f1624;color:#f0e6c8;border:1px solid #354;border-radius:8px;padding:.6rem .7rem;outline:0}
+  #blocksSection textarea{min-height:96px;resize:vertical;grid-column:1/3}
+  .blocks-actions{grid-column:1/3;display:flex;gap:8px;justify-content:flex-end}
+  .btn-add{background:linear-gradient(135deg,#6a0dad,#c77dff);color:#fff;border:0;border-radius:10px;padding:.6rem .9rem;font-weight:700;cursor:pointer;box-shadow:0 6px 20px rgba(124,58,237,.35)}
+  .btn-ghost{background:transparent;color:#caffca;border:1px solid rgba(77,255,77,.55);border-radius:8px;padding:.55rem .8rem;font-weight:600;cursor:pointer}
+  .unblock-btn{background:linear-gradient(90deg,#7d2ae8,#d46fff);color:#fff;border:0;border-radius:8px;padding:.45rem .75rem;font-weight:700;cursor:pointer;box-shadow:0 4px 10px rgba(125,42,232,.4)}
+  @media (max-width:860px){.kpis{grid-template-columns:1fr}.nav-btn{min-width:46%}.blocks-grid{grid-template-columns:1fr}.blocks-actions{grid-column:auto}}
+  #toastHost{position:fixed;top:16px;right:16px;display:grid;gap:10px;z-index:10050}
+  .toast{
+    opacity:0;transform:translateY(-8px);
+    background:linear-gradient(180deg,#ffe98f,#ffdd57);color:#111;
+    border:1px solid #ffdd57;border-radius:8px;padding:8px 12px;font-weight:700;
+    box-shadow:0 10px 24px rgba(0,0,0,.3),0 0 12px rgba(255,221,87,.35);
+    transition:opacity .25s ease,transform .25s ease
+  }
+  .toast.show{opacity:1;transform:translateY(0)}
+.kpis .kpi:nth-child(3) .chart-wrap{
+  display:flex !important;
+  justify-content:center !important;
+  align-items:center !important;
+  transform: translateX(1px) !important;  
+}
+  </style>
+</head>
+<body class="admin-page">
+  <div class="dash">
+    <div class="frame">
+      <div class="hero">
+        <button id="logoutBtn">Logout</button>
+        <h2 class="admin-title">🛡️ Admin Dashboard</h2>
+        <button id="refreshTop">Refresh Stats</button>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi"><h4>Total Bookings</h4><div id="totalBookings">0</div></div>
+        <div class="kpi"><h4>Most Popular Facility</h4><div id="popularFacility">—</div></div>
+        <div class="kpi">
+          <h4>Breakdown</h4>
+          <div class="chart-wrap">
+            <canvas id="facilityPie" width="260" height="260"></canvas>
+          </div>
+        </div>
+      </div>
+
+      
+
+      <section id="blocksSection" class="card">
+        <h3>Maintenance Blocks</h3>
+
+        <div class="blocks-grid">
+          <div class="field">
+            <label>Facility</label>
+            <select id="blockFacility">
+              <option value="">All facilities</option>
+              <option value="badminton">Badminton Court</option>
+              <option value="swimming">Swimming Pool</option>
+              <option value="gym">Gym</option>
+              <option value="classroomA">Classroom 1</option>
+              <option value="classroomB">Classroom 2</option>
+              <option value="classroomC">Classroom 3</option>
+              <option value="classroomD">Classroom 4</option>
+            </select>
+          </div>
+
+          <div class="field"><label>Date</label><input id="blockDate" type="date" /></div>
+          <div class="field"><label>Start</label><select id="blockStartSel"></select></div>
+          <div class="field"><label>End</label><select id="blockEndSel"></select></div>
+
+          <div class="field" style="grid-column:1 / 3">
+            <label>Reason</label>
+            <textarea id="blockReason" placeholder="e.g., Floor polishing"></textarea>
+          </div>
+
+          <div class="blocks-actions">
+            <button class="btn-add" type="button" id="addBlockBtn">Add Block</button>
+          </div>
+        </div>
+
+        <div id="blocksList">
+          <table class="table">
+            <thead><tr><th>ID</th><th>Facility</th><th>Start</th><th>End</th><th>Reason</th><th>Actions</th></tr></thead>
+            <tbody id="blocksRows"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Simple modal (fixed) -->
+<div id="modal"
+     style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:20000; align-items:center; justify-content:center;">
+
+  <div style="width:min(520px,92vw); background:#0b0f1a; color:#f0e6c8;
+              border:1px solid rgba(255,221,87,.35); border-radius:12px;
+              box-shadow:0 10px 28px rgba(0,0,0,.55);">
+    <div style="padding:12px 14px; border-bottom:1px solid rgba(255,221,87,.18);
+                display:flex; justify-content:space-between; align-items:center;">
+      <h4 id="modalTitle" style="margin:0; letter-spacing:.08em;">Notice</h4>
+      <button id="modalClose"
+              style="all:unset; cursor:pointer; padding:6px 8px; border-radius:6px;
+                     background:linear-gradient(180deg,#ffe98f,#ffdd57); color:#111; font-weight:700;">
+        Close
+      </button>
+    </div>
+    <div id="modalBody" style="padding:14px;"></div>
+  </div>
+</div>
+
+
+  <!-- Toast helper -->
+  <script>
+  (() => {
+    function host(){
+      let h = document.getElementById('toastHost');
+      if(!h){ h = document.createElement('div'); h.id = 'toastHost'; document.body.appendChild(h); }
+      return h;
+    }
+    window.showToast = function(msg='Stats refreshed', ms=1600){
+      const el = document.createElement('div');
+      el.className = 'toast';
+      el.innerHTML = `✅ ${msg}`;
+      host().appendChild(el);
+      requestAnimationFrame(()=> el.classList.add('show'));
+      setTimeout(()=>{ el.classList.remove('show'); setTimeout(()=> el.remove(), 260); }, ms);
+    };
+  })();
+  </script>
+
+  <!-- Modal helper -->
+  <script>
+  function showModal(title, html){
+    const m = document.getElementById('modal');
+    document.getElementById('modalTitle').textContent = title || 'Notice';
+    document.getElementById('modalBody').innerHTML   = html || '';
+    m.style.display = 'flex';
+  }
+  document.addEventListener('DOMContentLoaded', ()=>{
+    const m = document.getElementById('modal');
+    document.getElementById('modalClose').onclick = () => m.style.display = 'none';
+    m.addEventListener('click', (e)=> { if (e.target === m) m.style.display = 'none'; });
+  });
+  </script>
+
+  <!-- Admin gate -->
+  <script>
+  (function adminGate(){
+    const id = localStorage.getItem('hogwartsId');
+    const role = (localStorage.getItem('role')||'').toLowerCase();
+    if (!id) { location.replace('/login'); return; }
+    if (role !== 'admin') { location.replace('/booking/index.html'); return; }
+  })();
+  </script>
+
+  <script>
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('bookingRows')?.closest('.card')?.remove();
+});
+
+window.loadBookings = undefined;
+
+window.refreshAll = async function () {
+  const tasks = [];
+  if (window.loadKPIs)   tasks.push(loadKPIs());
+  // (bookings intentionally skipped)
+  if (window.loadBlocks) tasks.push(loadBlocks());
+  window.hogwarts?.loadBreakdown?.({ canvasId: 'facilityPie' }); // donut
+  await Promise.allSettled(tasks);
+  window.showToast?.('Stats refreshed');
+};
+if (!window.__adminRefreshBound) {
+  document.getElementById('refreshTop')?.addEventListener('click', (e)=>{ e.preventDefault(); window.refreshAll(); });
+  document.getElementById('refresh')?.addEventListener('click',     (e)=>{ e.preventDefault(); window.refreshAll(); });
+  window.__adminRefreshBound = true;
+}
+</script>
+
+
+
+  <!-- Maintenance blocks -->
+  <script>
+  const $  = (id) => document.getElementById(id);
+  const pad = (n) => String(n).padStart(2,'0');
+  const MAP = {
+    badminton:'Badminton Court', swimming:'Swimming Pool', gym:'Gym',
+    classroomA:'Classroom 1', classroomB:'Classroom 2', classroomC:'Classroom 3', classroomD:'Classroom 4'
+  };
+  const TIMES_1H = ['08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00','22:00'];
+
+  function fillSelect(sel, values, selected){
+    sel.replaceChildren();
+    for (const v of values){
+      const o = document.createElement('option'); o.value = o.textContent = v;
+      if (selected && v === selected) o.selected = true;
+      sel.appendChild(o);
+    }
+  }
+  const overlaps = (a0,a1,b0,b1)=> a0<b1 && b0<a1;
+
+  function blockedStarts(blocks,dateStr){
+    const set=new Set();
+    for(let i=0;i<TIMES_1H.length-1;i++){
+      const s=new Date(`${dateStr}T${TIMES_1H[i]}:00`);
+      const e=new Date(`${dateStr}T${TIMES_1H[i+1]}:00`);
+      for(const b of blocks){
+        const bs=new Date(b.start_time), be=new Date(b.end_time);
+        if(overlaps(s,e,bs,be)){ set.add(TIMES_1H[i]); break; }
+      }
+    }
+    return set;
+  }
+  function allowedStarts(blocks,dateStr){
+    const blocked=blockedStarts(blocks,dateStr);
+    let starts=TIMES_1H.slice(0,-1).filter(t=>!blocked.has(t));
+    const now=new Date(), todayStr=`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+    if(dateStr===todayStr){ const cutoff=`${pad(now.getMinutes()>0?now.getHours()+1:now.getHours())}:00`; starts=starts.filter(t=>t>=cutoff); }
+    return starts;
+  }
+  function allowedEndsFrom(startLabel,blocks,dateStr){
+    const blocked=blockedStarts(blocks,dateStr);
+    const i=TIMES_1H.indexOf(startLabel); const out=[];
+    for(let j=i+1;j<TIMES_1H.length;j++){ if(blocked.has(TIMES_1H[j])) break; out.push(TIMES_1H[j]); }
+    return out;
+  }
+  const fmtDMY = (ymd)=>{ if(!ymd) return ''; const [y,m,d]=ymd.split('-'); return `${d}-${m}-${y}`; };
+  function fmtLocal(dtStr){ const d=new Date(dtStr); const p=(n)=>String(n).padStart(2,'0'); return `${p(d.getDate())}-${p(d.getMonth()+1)}-${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`; }
+
+  // RACE GUARD
+  let __blocksRunToken = 0;
+
+  async function loadBlocks(){
+    const facVal=$('blockFacility').value;
+    const dateStr=$('blockDate').value;
+    const rowsEl=$('blocksRows'); const startEl=$('blockStartSel'); const endEl=$('blockEndSel'); const addBtn=$('addBlockBtn');
+    const myToken=++__blocksRunToken;
+
+    if(!dateStr){ rowsEl.innerHTML=`<tr><td colspan="6">Pick a date.</td></tr>`; return; }
+
+    const qs=new URLSearchParams({from:dateStr,to:dateStr}); if(facVal) qs.set('facility', MAP[facVal]||facVal);
+    const r=await fetch(`/api/blocks?${qs.toString()}`); const j=await r.json().catch(()=>({})); const blocks=(r.ok&&j.ok&&Array.isArray(j.blocks))?j.blocks:[];
+    if(myToken!==__blocksRunToken) return;
+
+    rowsEl.replaceChildren();
+    if(!blocks.length){
+      rowsEl.innerHTML=`<tr><td colspan="6">No blocks on ${fmtDMY(dateStr)}${facVal?'':' (all facilities)'}</td></tr>`;
+    }else{
+      for(const b of blocks.sort((a,b)=>a.start_time>b.start_time?1:-1)){
+        const tr=document.createElement('tr');
+        tr.innerHTML=`
+          <td>${b.id ?? '—'}</td>
+          <td>${(b.facility||'—').toUpperCase()}</td>
+          <td>${fmtLocal(b.start_time)}</td>
+          <td>${fmtLocal(b.end_time)}</td>
+          <td>${b.reason ?? ''}</td>
+          <td>${b.id ? `<button class="unblock-btn" data-del="${b.id}">Delete</button>` : ''}</td>`;
+        rowsEl.appendChild(tr);
+      }
+      rowsEl.querySelectorAll('[data-del]').forEach(btn=>{
+        btn.addEventListener('click', async ()=>{
+          const id=btn.getAttribute('data-del');
+          if(!confirm('Delete this maintenance block?')) return;
+          const rr=await fetch(`/api/admin/blocks/${id}`,{method:'DELETE',headers:{'x-user':'admin'}});
+          const jj=await rr.json().catch(()=>({}));
+          if(!rr.ok||!jj.ok){ alert('Delete failed: ' + (jj.error || `HTTP ${rr.status}`)); return; }
+          loadBlocks();
+        });
+      });
+    }
+
+    const starts=allowedStarts(blocks,dateStr);
+    fillSelect(startEl,starts,starts[0]);
+    const ends=starts.length ? allowedEndsFrom(starts[0],blocks,dateStr) : [];
+    fillSelect(endEl,ends,ends[0]);
+    if(addBtn) addBtn.disabled = !(starts.length && ends.length);
+
+    startEl.onchange=()=>{ const s=startEl.value; const endsNow=allowedEndsFrom(s,blocks,dateStr); fillSelect(endEl,endsNow,endsNow[0]); if(addBtn) addBtn.disabled=!endsNow.length; };
+  }
+
+  async function addBlock() {
+  const facSel  = $('blockFacility');
+  const facVal  = (facSel?.value || '').trim();
+  // Map the short value to the display name (API expects the name), fallback to option text
+  const facility = ((MAP[facVal] ?? facSel?.options[facSel.selectedIndex]?.text) || '').trim();
+
+  const dateStr  = $('blockDate').value;
+  const startStr = $('blockStartSel').value;
+  const endStr   = $('blockEndSel').value;
+  const reason   = $('blockReason').value.trim();
+
+  if (!facVal || !dateStr || !startStr || !endStr) {
+    showModal('Missing information', '<p>Please pick <b>facility</b>, <b>date</b>, <b>start</b>, and <b>end</b>.</p>');
+    return;
+  }
+
+  const withSecs   = t => (t && t.length === 5 ? `${t}:00` : (t || ''));
+  const start_time = `${dateStr}T${withSecs(startStr)}`;
+  const end_time   = `${dateStr}T${withSecs(endStr)}`;
+
+  if (new Date(end_time) <= new Date(start_time)) {
+    showModal('Invalid time range', '<p><b>End</b> must be after <b>Start</b>.</p>');
+    return;
+  }
+
+try {
+  const qs = new URLSearchParams({ facility, date: dateStr });
+  const r  = await fetch(`/api/availability?${qs.toString()}`);
+  const a  = await r.json().catch(()=> ({}));
+
+  const booked = Array.isArray(a.booked) ? a.booked : [];
+
+  const selS = start_time.slice(11,19), selE = end_time.slice(11,19);
+  const norm = t => (t && t.length === 5 ? `${t}:00` : (t || ''));
+  const overlaps = slot => {
+    const [s,e] = String(slot||'').replace(/\s/g,'').split('-').map(norm);
+    return s && e && !(e <= selS || s >= selE);
+  };
+
+  // If ANY booking overlaps, show the popout and stop.
+  if (booked.some(overlaps)) {
+    const slotLabel = `${startStr} - ${endStr}`;
+    const dateDMY   = fmtDMY(dateStr);
+    showModal(
+      'Unable to Block Maintenance',
+      `<p>The facility <b>${facility}</b> is <b>already booked</b> on <b>${dateDMY}</b> during <b>${slotLabel}</b>.</p>
+       <p>Please choose a different time.</p>`
+    );
+    return; // abort creating the maintenance block
+  }
+} catch {
+  // If availability fails, continue — server will still validate below
+}
+
+  // ---------- Create ----------
+  const btn = $('addBlockBtn'); if (btn) btn.disabled = true;
+  try {
+    const res = await fetch('/api/admin/blocks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-user': 'admin' },
+      body: JSON.stringify({ facility, start_time, end_time, reason: reason || null })
+    });
+
+    let j = {};
+    try { j = await res.json(); } catch {}
+
+    const msg = (j && (j.error || j.message || '')).toLowerCase();
+    const looksOverlap = msg.includes('overlap') || msg.includes('conflict') || msg.includes('book');
+
+    if (res.status === 409 || looksOverlap) {
+      const slot = `${startStr} - ${endStr}`;
+      showModal(
+        'Time Not Available',
+        `<p>Can't create a maintenance block for <b>${facility}</b> on <b>${fmtDMY(dateStr)}</b> at <b>${slot}</b>.</p>
+         <p>It overlaps with an existing <b>booking</b> or <b>maintenance block</b>. Please choose another time.</p>`
+      );
+      return;
+    }
+
+    if (!res.ok || j.ok === false) {
+      showModal('Add block failed', `<p>${j.error || `HTTP ${res.status}`}</p>`);
+      return;
+    }
+
+    $('blockReason').value = '';
+    window.showToast?.('Maintenance block added');
+    await loadBlocks();
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const dateEl=$('blockDate'); const now=new Date(); const today=`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+    dateEl.min=today; if(!dateEl.value) dateEl.value=today;
+
+    fillSelect($('blockStartSel'),TIMES_1H.slice(0,-1),'08:00');
+    fillSelect($('blockEndSel'),  TIMES_1H.slice(1),'09:00');
+
+    $('addBlockBtn').addEventListener('click',(e)=>{ e.preventDefault(); addBlock(); });
+    $('blockFacility').addEventListener('change',loadBlocks);
+    $('blockDate').addEventListener('change',loadBlocks);
+
+    loadBlocks();
+  });
+  </script>
+
+  <!-- KPIs & Bookings (with race guard to avoid duplicates) -->
+  <script>
+  (() => {
+    const $ = (id) => document.getElementById(id);
+
+    let __bookingsRunToken = 0;
+
+    async function loadKPIs() {
+      try {
+        const r = await fetch('/api/booking-count');
+        const j = await r.json();
+        if (r.ok && j.ok !== false) $('totalBookings').textContent = j.count ?? 0;
+      } catch {}
+      try {
+        const r2 = await fetch('/api/booking-stats');
+        const j2 = await r2.json();
+        if (!(r2.ok && j2.ok !== false)) return;
+        const rows = j2.rows || [];
+        const top = rows.reduce((a,b)=>(!a || b.count > a.count) ? b : a, null);
+        $('popularFacility').textContent = top ? top.facility : '—';
+      } catch {}
+    }
+
+    async function loadBookings() {
+      const myToken = ++__bookingsRunToken;
+      const body = $('bookingRows'); if (!body) return;
+      try {
+        const r = await fetch('/api/admin/bookings', { headers: { 'x-user': 'admin' } });
+        const j = await r.json();
+        if (!(r.ok && j.ok)) throw new Error(j.error || `HTTP ${r.status}`);
+
+        if (myToken !== __bookingsRunToken) return; // only latest render
+        body.replaceChildren();
+
+        const items = j.items || [];
+        if (!items.length) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td colspan="5">No bookings</td>`;
+          body.appendChild(tr);
+          return;
+        }
+        for (const b of items) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${b.id}</td>
+            <td>${b.hogwartsId}</td>
+            <td>${b.facility}</td>
+            <td>${b.date}</td>
+            <td>${b.timeSlot}</td>`;
+          body.appendChild(tr);
+        }
+      } catch (e) {
+        if (myToken !== __bookingsRunToken) return;
+        body.replaceChildren();
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td colspan="5">Failed to load: ${e.message || e}</td>`;
+        body.appendChild(tr);
+      }
+    }
+
+    window.loadKPIs = loadKPIs;
+    window.loadBookings = loadBookings;
+
+    document.getElementById('logoutBtn')?.addEventListener('click', async (e) => {
+      e.preventDefault();
+      try { await fetch('/api/auth/logout', { method: 'POST', headers: { 'x-user': 'admin' } }); } catch {}
+      try { localStorage.clear(); } catch {}
+      location.replace('/login');
+    });
+
+    // initial load (also draws donut via refreshAll)
+    window.refreshAll();
+  })();
+  </script>
+
+  <!-- Bookings table formatter -->
+  <script>
+  (function () {
+    const toDMY = (s) => {
+      const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s||"").trim());
+      return m ? `${m[3]}-${m[2]}-${m[1]}` : s;
+    };
+    const tidyTime = (t) => String(t||"").trim().replace(/(\d{2}:\d{2}):00/g, "$1");
+
+    function applyFormatOnce() {
+      const tbody = document.getElementById('bookingRows');
+      if (!tbody) return;
+      for (const tr of tbody.querySelectorAll('tr')) {
+        const tds = tr.children; if (!tds || tds.length < 5) continue;
+        const dateCell = tds[3], timeCell = tds[4];
+        const wasDate = (dateCell.textContent || '').trim();
+        const wasTime = (timeCell.textContent || '').trim();
+        const newDate = toDMY(wasDate);
+        const newTime = tidyTime(wasTime);
+        if (newDate !== wasDate) dateCell.textContent = newDate;
+        if (newTime !== wasTime) timeCell.textContent = newTime;
+      }
+    }
+
+    let rafId = 0;
+    const schedule = () => {
+      if (rafId) return;
+      rafId = requestAnimationFrame(() => { rafId = 0; applyFormatOnce(); });
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      applyFormatOnce();
+      const tbody = document.getElementById('bookingRows');
+      if (!tbody) return;
+      const obs = new MutationObserver((muts) => {
+        if (muts.some(m => m.type === 'childList')) schedule();
+      });
+      obs.observe(tbody, { childList: true, subtree: false });
+    });
+  })();
+  </script>
+
+  <!-- Donut renderer shared by booking -->
+  <script src="../booking/script.js"></script>
+
+  <!-- Ensure donut renders after load -->
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    window.hogwarts?.loadBreakdown?.({ canvasId: 'facilityPie' });
+  });
+  </script>
+</body>
+</html>
