@@ -1,0 +1,20 @@
+# SQLite temp files
+*.db-shm
+*.db-wal
+*.db-journal
+
+# SQLite main DBs (optional: if you only want to keep .sql schemas)
+*.db
+
+# Node artifacts
+node_modules/
+**/node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# OS cruft
+.DS_Store
+Thumbs.db
+
+# Local env files
+.env
