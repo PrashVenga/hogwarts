@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>My Bookings | Hogwarts</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .booking-container {
+      max-width: 700px;
+      margin: 2rem auto;
+      padding: 1.5rem;
+      background: rgba(10, 10, 20, 0.85);
+      border: 2px solid #ffdd57;
+      border-radius: 12px;
+      color: #f0e6c8;
+      position: relative;
+    }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { padding: 0.6rem; border: 1px solid #444; }
+    button.cancel-btn {
+      background: #c0392b; border: none; color: #fff;
+      padding: 0.3rem 0.6rem; border-radius: 4px; cursor: pointer;
+      transition: background 0.2s;
+    }
+    button.cancel-btn:hover { background: #e74c3c; }
+    button.cancel-btn[disabled] { opacity: 0.6; cursor: not-allowed; }
+
+    /* Toast styles */
+    #toastHost {
+      position: fixed; right: 1rem; bottom: 1rem; z-index: 9999;
+      display: grid; gap: .5rem;
+    }
+    .toast {
+      min-width: 240px; max-width: 360px; padding: .75rem 1rem;
+      border-radius: 10px; font-size: .9rem;
+      color: #1a1a1a; background: #ffdd57; /* default gold */
+      box-shadow: 0 6px 18px rgba(0,0,0,.35);
+      animation: toast-in .18s ease-out;
+    }
+    .toast.success { background: #a6f3c1; }
+    .toast.error   { background: #ffc0c0; }
+    .toast.info    { background: #d7e6ff; }
+    @keyframes toast-in { from {opacity:.0; transform: translateY(6px)} to {opacity:1; transform:none} }
+  </style>
+</head>
+
+<body class="booking-page">
+  <div class="booking-container">
+    <h2>🗓️ My Bookings</h2>
+    <p>If you need to cancel, click <strong>Cancel</strong> below:</p>
+    <button class="back-btn" type="button" onclick="goBack()">⬅ Back</button>
+    <button id="refreshBtn" class="refresh-btn" type="button">Refresh</button>
+
+    <table id="myBookingsTable">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Facility</th>
+          <th>Date</th>
+          <th>Time</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <!-- Toast host -->
+  <div id="toastHost" aria-live="polite" aria-atomic="true"></div>
+
+  <script>
+  const API = (location.origin.startsWith('http'))
+    ? '/api'
+    : 'http://localhost:3000/api';
+
+  // === Toast helper ===
+  function toast({ message, type = 'info', timeout = 3500 }) {
+    const host = document.getElementById('toastHost');
+    if (!host) return;
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    el.textContent = message;
+    host.appendChild(el);
+    if (timeout > 0) setTimeout(() => { el.isConnected && host.removeChild(el); }, timeout);
+  }
+
+  // === Timezone-aware cancel window (Singapore +08:00) ===
+  const TZ_OFFSET = '+08:00';
+  function isSlotCancelable(dateStr, timeSlotStr) {
+    let start = '00:00';
+    if (typeof timeSlotStr === 'string' && timeSlotStr.includes('-')) {
+      start = timeSlotStr.split('-')[0].trim();
+    } else if (typeof timeSlotStr === 'string' && timeSlotStr.match(/^\d{2}:\d{2}$/)) {
+      start = timeSlotStr;
+    }
+    const slotStart = new Date(`${dateStr}T${start}:00${TZ_OFFSET}`);
+    return Date.now() < slotStart.getTime();
+  }
+
+  // Load this user's bookings
+  async function loadMyBookings() {
+    const hogwartsId = localStorage.getItem('hogwartsId');
+    if (!hogwartsId) {
+      window.location.href = 'login.html';
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API}/my-bookings?hogwartsId=${encodeURIComponent(hogwartsId)}`, {
+        credentials: 'same-origin'
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const bookings = await res.json();
+      renderTable(Array.isArray(bookings) ? bookings : []);
+    } catch (err) {
+      console.error('Error loading your bookings:', err);
+      const tbody = document.querySelector('#myBookingsTable tbody');
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#f88">Failed to load bookings.</td></tr>';
+      toast({ message: 'Failed to load bookings', type: 'error' });
+    }
+  }
+
+  // Render rows (disable Cancel for past/started slots)
+  function renderTable(bookings) {
+    const tbody = document.querySelector('#myBookingsTable tbody');
+    tbody.innerHTML = '';
+    if (!bookings.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">No bookings found.</td></tr>';
+      return;
+    }
+
+    // Sort by date + time DESC
+    bookings.sort((a, b) => {
+      const aDateTime = new Date(`${a.date}T${(a.timeSlot || a.time || '00:00').split('-')[0]}:00`);
+      const bDateTime = new Date(`${b.date}T${(b.timeSlot || b.time || '00:00').split('-')[0]}:00`);
+      return bDateTime - aDateTime;
+    });
+
+    // Show only 10 most recent
+    const recent = bookings.slice(0, 10);
+
+    for (const b of recent) {
+      const canCancel = ('isCancelable' in b)
+        ? !!b.isCancelable
+        : isSlotCancelable(b.date, b.timeSlot || b.time);
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${b.id}</td>
+        <td>${b.facility}</td>
+        <td>${b.date}</td>
+        <td>${b.timeSlot || b.time || ''}</td>
+        <td>
+          <button type="button"
+            class="cancel-btn"
+            ${canCancel ? '' : 'disabled aria-disabled="true" title="This booking is in the past and cannot be canceled."'}
+            data-id="${String(b.id)}">Cancel</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    }
+  }
+
+  // Cancel buttons
+  document.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.cancel-btn');
+    if (!btn || btn.disabled) return;
+
+    const id = btn.dataset.id;
+    if (!id) {
+      toast({ message: 'Missing booking id', type: 'error' });
+      return;
+    }
+    if (!confirm('Are you sure you want to cancel this booking?')) return;
+
+    btn.disabled = true;
+
+    try {
+      const res = await fetch(`${API}/bookings/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+      });
+
+      let data = null;
+      try { data = await res.json(); } catch {}
+
+      if (!res.ok) {
+        const msg = (data && (data.error || data.message)) || `HTTP ${res.status}`;
+        throw new Error(msg);
+      }
+
+      await loadMyBookings();
+      toast({ message: 'Booking cancelled successfully', type: 'success' });
+    } catch (err) {
+      console.error('Error cancelling booking:', err);
+      toast({ message: `Cancel failed: ${err.message}`, type: 'error', timeout: 6000 });
+    }
+  });
+
+  document.getElementById('refreshBtn').addEventListener('click', loadMyBookings);
+
+  function goBack() {
+    if (document.referrer) {
+      try {
+        const ref = new URL(document.referrer);
+        if (ref.origin === window.location.origin) {
+          window.location.href = document.referrer;
+          return;
+        }
+      } catch (e) {}
+    }
+    if (window.history.length > 1) return window.history.back();
+    window.location.href = 'booking.html';
+  }
+
+  document.addEventListener('DOMContentLoaded', loadMyBookings);
+  </script>
+</body>
+</html>

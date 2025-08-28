@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Hogwarts Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* inline feedback */
+    .inline-msg{display:none;margin-top:.75rem;font-weight:600;opacity:0;transition:opacity .25s}
+    .inline-msg.success{color:#b3ffb3}
+    .inline-msg.error{color:#ff9999}
+    .inline-msg.show{display:block;opacity:1}
+  </style>
+</head>
+
+<!-- Magical twinkles -->
+<div id="glitter-layer" aria-hidden="true"></div>
+<script>
+(function spawnGlitter(){
+  const host = document.getElementById('glitter-layer');
+  if (!host) return;
+  const N = 28;
+  for (let i = 0; i < N; i++){
+    const d = document.createElement('div');
+    d.className = 'glitter ' + (['g1','g2','g3'][i%3]);
+    const left = Math.random()*100;
+    const drift = (Math.random()*40 - 20) + 'vw';
+    const size = 6 + Math.random()*10;
+    const dur = 8 + Math.random()*10;
+    const delay = Math.random()*6;
+    d.style.left = left + 'vw';
+    d.style.setProperty('--drift', drift);
+    d.style.width = size + 'px';
+    d.style.height = size + 'px';
+    d.style.animationDuration = dur + 's, ' + (dur*0.8) + 's';
+    d.style.animationDelay = delay + 's, ' + delay + 's';
+    host.appendChild(d);
+  }
+})();
+</script>
+
+<body class="login-page">
+  <div class="form-container">
+    <h2>Member Login</h2>
+
+    <form id="loginForm">
+      <label for="hogwartsId">🆔 Hogwarts ID</label>
+      <input type="text" id="hogwartsId" required placeholder="your-hogwarts-id">
+
+      <label for="password">🔒 Password</label>
+      <input type="password" id="password" required placeholder="••••••••">
+
+      <!-- single feedback host (keep only this one) -->
+      <div id="loginResult" class="inline-msg" aria-live="polite"></div>
+
+      <button type="submit">Enter facility booking</button>
+
+      <div id="loginResult" style="min-height:1.2rem; margin-top:.75rem; font-weight:600;"></div>
+
+    </form>
+
+    <div class="register-cta">
+      <p class="cta-hint">NEW HERE?</p>
+      <a href="registration.html" class="btn login-register-btn">REGISTER INSTEAD</a>
+    </div>
+  </div>
+
+  <script>
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('loginForm');
+
+  // Find the message host (must exist only ONCE)
+  const msg = document.getElementById('loginResult');
+
+  // Safety: if somehow missing, create it right under the form
+  if (!msg) {
+    const m = document.createElement('div');
+    m.id = 'loginResult';
+    m.style.minHeight = '1.2rem';
+    m.style.marginTop = '.75rem';
+    m.style.fontWeight = '600';
+    form.appendChild(m);
+  }
+
+  const $msg = document.getElementById('loginResult');
+
+  function show(color, text) {
+    // Force visible and colored
+    $msg.style.display = 'block';
+    $msg.style.opacity = '1';
+    $msg.style.minHeight = '1.2rem';
+    $msg.style.marginTop = '.75rem';
+    $msg.style.fontWeight = '600';
+    $msg.style.color = color;
+    $msg.textContent = text;
+    console.log('[login msg]', text);
+  }
+
+  function clearSoon(ms = 3000) {
+    setTimeout(() => {
+      $msg.textContent = '';
+      // keep the line height so layout doesn’t jump
+    }, ms);
+  }
+
+  // Debug: check duplicates
+  const dups = document.querySelectorAll('#loginResult');
+  console.log('[login] #loginResult count =', dups.length);
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const id = (document.getElementById('hogwartsId')?.value || '').trim();
+    const pw = (document.getElementById('password')?.value || '');
+
+    if (!id || !pw) {
+      show('#ff9999', '❌ Please enter your ID and password.');
+      clearSoon(4000);
+      return;
+    }
+
+    // Show immediate “working” feedback so you SEE it
+    show('#b3ffb3', '⏳ Signing in…');
+
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        // Send BOTH keys to be safe with your backend
+        body: JSON.stringify({ username: id, hogwartsId: id, password: pw }),
+        credentials: 'same-origin',
+      });
+
+      // Try to parse JSON, fall back to text
+      let data = null;
+      const raw = await res.text();
+      try { data = JSON.parse(raw); } catch { data = { error: raw }; }
+
+      console.log('[login] status', res.status, 'payload:', data);
+
+      if (!res.ok || !data || data.success !== true) {
+        show('#ff9999', `❌ ${data?.error || 'Login failed'}`);
+        clearSoon(5000);
+        return;
+      }
+
+      // Success
+      localStorage.setItem('username', data.username);
+      localStorage.setItem('hogwartsId', data.username);
+      localStorage.setItem('role', data.role || '');
+      localStorage.setItem('isAdmin', data.isAdmin ? '1' : '0');
+
+      show('#b3ffb3', '✅ Login successful. Redirecting…');
+      setTimeout(() => {
+        window.location.href = data.redirect || 'booking.html';
+      }, 900);
+      clearSoon(2000);
+    } catch (err) {
+      console.error('[login] fetch error:', err);
+      show('#ff9999', '❌ Network error — please try again.');
+      clearSoon(5000);
+    }
+  });
+});
+
+// If page is restored from back/forward cache with old text visible, clear it
+window.addEventListener('pageshow', (ev) => {
+  if (!ev.persisted) return;
+  const msg = document.getElementById('loginResult');
+  if (msg) msg.textContent = '';
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Staff Dashboard | Hogwarts</title>
+
+  <!-- Fonts + CSS -->
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Chart.js -->
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+</head>
+
+<!-- Keep login-page to retain Hogwarts theme -->
+<body class="login-page staff-dashboard" style="visibility:hidden">
+  <div class="form-container staff-dashboard">
+
+    <!-- Header buttons -->
+    <div class="top-controls">
+      <button id="logoutBtn" class="logout-btn">🚪 Logout</button>
+      <button id="refresh" class="refresh-btn">Refresh Stats</button>
+    
+    </div>
+
+    <h2>🧙‍♂️ Admin Dashboard</h2>
+
+    <!-- Stats + Chart -->
+    <div class="stats-chart">
+      <div class="stats-block" id="stats">
+        <p>Total Bookings: <strong id="totalBookings">—</strong></p>
+        <p>Most Popular Facility: <strong id="popularFacility">—</strong></p>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="facilityPie" width="300" height="300"></canvas>
+      </div>
+    </div>
+
+    <!-- Booking table -->
+    <h3>Top 10 recent Bookings</h3>
+    <div class="table-actions">
+<button id="exportXlsxBtn" class="btn-arcane" type="button">
+    <span class="wand">🪄</span>
+    <span>Export Data.csv</span>
+  </button>
+</div>
+    <table id="bookingsTable">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>User</th>
+          <th>Facility</th>
+          <th>Date</th>
+          <th>Time</th>
+        </tr>
+      </thead>
+      <tbody id="bookingRows"></tbody>
+    </table>
+
+    <!-- Maintenance Blocks -->
+    <div id="blocksSection" class="blocks-section">
+      <h3 class="section-title">MAINTENANCE BLOCKS</h3>
+
+      <div class="blocks-grid">
+        <div class="field facility">
+          <label for="blockFacility">Facility</label>
+          <select id="blockFacility" required>
+            <option value="">— Select Facility —</option>
+            <option value="badminton">Badminton Court</option>
+            <option value="swimming">Swimming Pool</option>
+            <option value="gym">Gym</option>
+            <option value="classroomA">Classroom A</option>
+            <option value="classroomB">Classroom B</option>
+            <option value="classroomC">Classroom C</option>
+            <option value="classroomD">Classroom D</option>
+          </select>
+        </div>
+
+        <div class="field date">
+          <label for="blockDate">Date</label>
+          <input id="blockDate" type="date" required />
+        </div>
+
+        <div class="field start">
+          <label for="blockStartSel">Start</label>
+          <select id="blockStartSel" required></select>
+        </div>
+
+        <div class="field end">
+          <label for="blockEndSel">End</label>
+          <select id="blockEndSel" required></select>
+        </div>
+
+        <div class="field reason">
+          <label for="blockReason">Reason</label>
+          <textarea id="blockReason" placeholder="e.g., Floor polishing"></textarea>
+        </div>
+
+        <div class="action">
+          <button id="addBlockBtn" class="btn-add">Add Block</button>
+        </div>
+      </div>
+
+      <div id="blocksList" class="blocks-list">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Facility</th>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Reason</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="blocksRows"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Dashboard logic -->
+  <script src="dashboard.js"></script>
+
+  <!-- Export Excel button -->
+  <script>
+    document.getElementById('exportXlsxBtn')?.addEventListener('click', () => {
+      const qs = new URLSearchParams({
+        start: document.getElementById('startDate')?.value || '1970-01-01',
+        end:   document.getElementById('endDate')?.value   || '2999-12-31'
+      });
+      window.location.href = `/api/admin/export.xlsx?${qs.toString()}`;
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Welcome to Hogwarts</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <!-- Glitter layer (non-interactive, behind everything) -->
+  <div id="glitter-layer" aria-hidden="true"></div>
+
+  <h1>Welcome to Hogwarts</h1>
+
+  <div class="hogwarts-img">
+    <img src="images/hogwarts-campus.jpeg" alt="Hogwarts Campus">
+  </div>
+
+  <p>
+    Step into the legendary halls of <strong>Hogwarts School of Witchcraft and Wizardry</strong> —
+    a place where magic comes alive, friendships are forged, and knowledge knows no bounds.
+    Here, students are sorted into houses, taught by the finest professors, and given access
+    to world-class magical facilities.
+  </p>
+
+  <p>
+    From enchanted classrooms to the grand dining hall, from the serene lake to the
+    bustling Quidditch pitch, Hogwarts is more than just a school — it's a journey.
+    Begin yours now.
+  </p>
+
+  <a href="login.html">⚡ Book Magical Facilities Now</a>
+
+  <!-- Audio (autoplay-safe: starts muted) -->
+  <audio id="bgm" src="music/The Wand's Whisper.mp3" autoplay muted loop playsinline preload="auto"></audio>
+
+  <!-- Audio controls -->
+  <div id="audioBar" class="audio-bar">
+    <button id="audioToggle" type="button" class="btn-magic">▶ Play</button>
+    <button id="audioMute" type="button" class="btn-magic-secondary">🔊 Unmute</button>
+  </div>
+
+  <!-- Audio script -->
+  <script>
+    (() => {
+      const audio = document.getElementById('bgm');
+      const toggle = document.getElementById('audioToggle');
+      const muteBtn = document.getElementById('audioMute');
+
+      audio.volume = 0.6;      // comfy default volume
+      audio.muted = true;     // start muted for autoplay compliance
+
+      // First user gesture: unmute + play (single click)
+      const kick = async () => {
+        audio.muted = false;
+        try { await audio.play(); } catch { }
+        updateUI();
+        window.removeEventListener('pointerdown', kick);
+        window.removeEventListener('keydown', kick);
+      };
+      window.addEventListener('pointerdown', kick, { once: true });
+      window.addEventListener('keydown', kick, { once: true });
+
+      // Play/Pause
+      toggle.addEventListener('click', async () => {
+        if (audio.paused) { try { await audio.play(); } catch { } }
+        else { audio.pause(); }
+        updateUI();
+      });
+
+      // Mute/Unmute
+      muteBtn.addEventListener('click', () => {
+        audio.muted = !audio.muted;
+        updateUI();
+      });
+
+      function updateUI() {
+        toggle.textContent = audio.paused ? '▶ Play' : '⏸ Pause';
+        muteBtn.textContent = audio.muted ? '🔊 Unmute' : '🔇 Mute';
+      }
+      updateUI();
+    })();
+  </script>
+
+  <!-- Glitter script -->
+  <script>
+    (() => {
+      const layer = document.getElementById('glitter-layer');
+      if (!layer) return;
+
+      const COUNT = 140;  // more or less sparkle
+      const MIN_DUR = 12;
+      const MAX_DUR = 24;
+      const MIN_SIZE = 4;
+      const MAX_SIZE = 10;
+
+      for (let i = 0; i < COUNT; i++) {
+        const s = document.createElement('span');
+        s.className = 'glitter ' + ['g1', 'g2', 'g3'][i % 3];
+
+        // random horizontal start
+        s.style.left = (Math.random() * 100).toFixed(2) + 'vw';
+
+        // size
+        const size = Math.floor(Math.random() * (MAX_SIZE - MIN_SIZE) + MIN_SIZE);
+        s.style.width = size + 'px';
+        s.style.height = size + 'px';
+
+        // animation timing
+        const fallDur = (Math.random() * (MAX_DUR - MIN_DUR) + MIN_DUR).toFixed(2);
+        const twinkleDur = (Math.random() * 2 + 1.2).toFixed(2);
+        const delay = (Math.random() * -MAX_DUR).toFixed(2); // negative => already falling
+
+        // ✅ use template strings with backticks
+        s.style.animationDuration = `${fallDur}s, ${twinkleDur}s`;
+        s.style.animationDelay = `${delay}s, ${(Math.random()).toFixed(2)}s`;
+
+        // sideways drift
+        s.style.setProperty('--drift', (Math.random() * 120 - 60).toFixed(1) + 'px');
+
+        layer.appendChild(s);
+      }
+    })();
+  </script>
+</body>
+
+</html>

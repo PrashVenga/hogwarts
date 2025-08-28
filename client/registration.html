@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Register | Hogwarts</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="login-page">
+  <div class="form-container">
+    <h2>Register</h2>
+    <form id="registerForm">
+      <label for="hogwartsId">🆔 Hogwarts ID</label>
+      <input type="text" id="hogwartsId" required placeholder="your-hogwarts-id">
+
+      <label for="password">🔒 Password</label>
+      <input type="password" id="password" required placeholder="••••••••">
+
+      <label for="role">🏷️ Role</label>
+      <select id="role" required>
+        <option value="">— select role —</option>
+        <option value="student">Student</option>
+        <option value="teacher">Teacher</option>
+      </select>
+
+      <button type="submit" class="register-btn">Register</button>
+    </form>
+
+    <p class="auth-footer">Already have an account? <a href="login.html">Login here</a></p>
+    <div id="registerResult"></div>
+  </div>
+
+<script>
+  // Bind the handler after the DOM is ready
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('registerForm');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();                               // prevent normal submission
+      console.log("🔔 registerUser() fired");           // sanity check
+
+      const id   = document.getElementById("hogwartsId").value.trim();
+      const pw   = document.getElementById("password").value;
+      const role = document.getElementById("role").value;
+      const msg  = document.getElementById("registerResult"); // your green message element
+
+      try {
+        const res = await fetch("http://localhost:3000/api/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ hogwartsId: id, password: pw, role })
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          // ✅ show success and redirect after a short delay
+          msg.style.color = "#b3ffb3";
+          msg.textContent = "✅ Registration successful, redirecting to LOGIN page...";
+          msg.style.display = "block";
+
+          setTimeout(() => {
+            window.location.href = "login.html";
+          }, 2000);
+        } else {
+          msg.style.color = "#ff9999";
+          msg.textContent = `❌ ${data.error}`;
+          msg.style.display = "block";
+        }
+      } catch (err) {
+        msg.style.color = "#ff9999";
+        msg.textContent = "Network error—please try again.";
+        msg.style.display = "block";
+      }
+    });
+  });
+</script>
+
+</body>
+</html>

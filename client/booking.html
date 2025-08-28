@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Book a Facility | Hogwarts</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="booking-page"> 
+  <div class="booking-container">
+    <div class="top-controls">
+      <!-- Change Password goes to a new page -->
+      <a href="change-password.html" class="mini-btn">🔑 Change Password</a>
+
+      <!-- Logout stays a button -->
+      <button id="logoutBtn" class="mini-btn" type="button">🚪 Logout</button>
+    </div>
+    
+    <h2>📚 Book a Facility</h2>
+
+    <form id="bookingForm">
+      <!-- Facility -->
+      <div class="form-group">
+        <label for="facility">Select Facility:</label>
+        <select id="facility" required>
+          <option value="">— Select Facility —</option>
+          <option value="Badminton Court">Badminton Court</option>
+          <option value="Swimming Pool">Swimming Pool</option>
+          <option value="Gym">Gym</option>
+          <option value="Classroom A">Classroom A</option>
+          <option value="Classroom B">Classroom B</option>
+          <option value="Classroom C">Classroom C</option>
+          <option value="Classroom D">Classroom D</option>
+        </select>
+      </div>
+
+      <!-- Date -->
+      <div class="form-group">
+        <label for="bookingDate">Select Date:</label>
+        <input type="date" id="bookingDate" required>
+      </div>
+
+      <!-- Legend + instruction -->
+<div class="legend-cta">
+  <div class="legend">
+    <span class="legend-item available">Available</span>
+    <span class="legend-item booked">Booked</span>
+    <span class="legend-item blocked">Blocked</span>
+  </div>
+
+  <p class="legend-note">Select facility and date.</p>
+</div>
+
+      <!-- Heatmap -->
+      <div id="availabilityGrid" class="availability-grid"></div>
+
+      <div class="actions">
+        <a href="bookingDisplay.html" class="view-bookings-btn">View My Bookings</a>
+        <button type="submit" class="book-now-btn">Book Now</button>
+      </div>
+    </form>
+
+    <div id="bookingResult"></div>
+  </div>
+
+  <!-- Global -->
+  <script src="script.js"></script>
+  <!-- Page logic -->
+  <script src="booking.js"></script>
+</body>
+</html>
