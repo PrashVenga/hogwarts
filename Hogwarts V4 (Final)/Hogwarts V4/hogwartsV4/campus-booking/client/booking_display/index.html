@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>My Bookings | Hogwarts</title>
+
+  <!-- Prevent cached back-nav after logout -->
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    .booking-container {
+      max-width: 700px; margin: 2rem auto; padding: 1.5rem;
+      background: rgba(10,10,20,0.85); border: 2px solid #ffdd57; border-radius: 12px;
+      color: #f0e6c8; position: relative;
+      box-shadow: 0 0 15px rgba(106,13,173,.5), inset 0 0 10px rgba(255,221,87,.25);
+    }
+    h2 { margin: 0 0 .5rem }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { padding: .6rem; border: 1px solid #273352; }
+    th { background: #0f1730; }
+    .actions { display:flex; gap:12px; margin-top:10px; }
+    .nav-btn { background:#1f2a44; color:#fff; border:none; padding:.5rem .8rem; border-radius:6px; cursor:pointer; text-decoration:none; display:inline-block }
+    .view-bookings-btn { background:#ffdd57; color:#0a0a20; font-weight:700; border-radius:8px; padding:.5rem .8rem; }
+    button.cancel-btn {
+      background:#c0392b; border:none; color:#fff; padding:.35rem .6rem;
+      border-radius:6px; cursor:pointer; transition: filter .15s;
+    }
+    button.cancel-btn:hover { filter: brightness(1.1); }
+    /* NEW: make disabled obvious and non-interactive */
+    .cancel-btn[disabled] { opacity:.45; pointer-events:none; filter:saturate(.5); cursor:not-allowed; }
+
+    .muted { opacity:.8 }
+    .right { text-align:right }
+    .logout-button { float:right }
+  </style>
+</head>
+<body class="booking-page">
+  <div id="toast" class="toast" aria-live="polite"></div>
+
+  <div class="booking-container">
+    <button id="logoutBtn" class="nav-btn logout-button" type="button">Logout</button>
+    <h2>🗓️ My Bookings</h2>
+    <p class="muted">Cancel any upcoming booking below.</p>
+
+    <div class="actions">
+      <button type="button" id="refreshBtn" class="view-bookings-btn">Refresh</button>
+      <a href="/booking" class="nav-btn" style="text-decoration:none;">Back to Booking</a>
+    </div>
+
+    <table id="myBookingsTable" aria-live="polite">
+      <thead>
+        <tr>
+          <th class="right">ID</th>
+          <th>Facility</th>
+          <th>Date</th>
+          <th>Time</th>
+          <th class="right">Action</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+      <tfoot>
+        <tr><td id="countCell" colspan="5" class="muted right">—</td></tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <script>
+    // ---- tiny toast
+    function showToast(message, isError = false, opts = {}) {
+      const placeBelow = opts.placement === 'below';
+      let el = document.getElementById('toast');
+      if (!el) { el = document.createElement('div'); el.id = 'toast'; el.className = 'toast'; document.body.appendChild(el); }
+      if (placeBelow) {
+        const host = document.querySelector('.booking-container') || document.body;
+        if (el.parentElement !== host) host.appendChild(el);
+        el.classList.add('toast--below');
+      } else {
+        if (el.parentElement !== document.body) document.body.appendChild(el);
+        el.classList.remove('toast--below');
+      }
+      el.textContent = message;
+      el.classList.toggle('error', !!isError);
+      document.body.offsetWidth; // reflow
+      el.classList.add('show');
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => el.classList.remove('show'), 2000);
+    }
+
+    // ---- Auth gate
+    (function gate(){
+      const id = localStorage.getItem('hogwartsId');
+      if (!id) location.replace('/login');
+      window.addEventListener('pageshow', (e) => {
+        if (e.persisted && !localStorage.getItem('hogwartsId')) location.replace('/login');
+      });
+    })();
+
+    // ---- Helpers
+    const API = ''; // same-origin
+    const $ = (s, r=document) => r.querySelector(s);
+
+    function fmtDMY(ymd){
+      const [y,m,d] = (ymd || '').split('-');
+      return (y && m && d) ? `${d}-${m}-${y}` : (ymd || '');
+    }
+    function fmtSlot(slot){
+      if (!slot) return '';
+      const [s,e] = String(slot).split('-');
+      const hhmm = t => (t||'').slice(0,5);
+      return `${hhmm(s)} - ${hhmm(e)}`;
+    }
+    function parseStart(ts){ const m=String(ts).match(/^(\d{2}:\d{2})/); return m? m[1] : '00:00'; }
+    function sortByDateTime(a,b){
+      if (a.date !== b.date) return a.date < b.date ? -1 : 1;
+      const as = parseStart(a.timeSlot), bs = parseStart(b.timeSlot);
+      return as < bs ? -1 : as > bs ? 1 : 0;
+    }
+
+    // NEW: build a comparable start ISO and check if it's in the past (to minutes)
+    function getStartISO(b) {
+      if (b.start_time) return b.start_time; // prefer server ISO if available
+      const slot = String(b.timeSlot || '').replace(/\s/g,''); // "HH:MM[:SS]-HH:MM[:SS]"
+      const startHHMM = (slot.split('-')[0] || '00:00').slice(0,5);
+      return `${b.date}T${startHHMM}:00`;
+    }
+    function isPastStart(b) {
+      const start = new Date(getStartISO(b));
+      const now = new Date();
+      return start.getTime() <= now.getTime();
+    }
+
+    // ---- Data load
+    async function loadMyBookings() {
+      const hogwartsId = localStorage.getItem('hogwartsId');
+      if (!hogwartsId) { location.replace('/login'); return; }
+      try {
+        const res = await fetch(`${API}/api/my-bookings?hogwartsId=${encodeURIComponent(hogwartsId)}`);
+        const data = await res.json().catch(()=> ({}));
+        const items = Array.isArray(data) ? data : (data.items || data.rows || []);
+        const shaped = items.map(r => ({
+          id: r.id ?? r.booking_id ?? r.bookingId,
+          facility: r.facility ?? r.facility_name ?? r.name ?? `#${r.facility_id ?? '?'}`,
+          date: r.date ?? r.date_ymd,           // YYYY-MM-DD
+          timeSlot: r.timeSlot ?? r.time_slot,  // "HH:MM[:SS]-HH:MM[:SS]"
+          start_time: r.start_time              // optional ISO from server
+        })).filter(x => x.id && x.date && x.timeSlot);
+
+        shaped.sort(sortByDateTime);
+        renderTable(shaped);
+      } catch (err) {
+        console.error('Error loading bookings:', err);
+        renderTable([]);
+      }
+    }
+
+    function renderTable(list) {
+      const tbody = $('#myBookingsTable tbody');
+      const countCell = $('#countCell');
+      tbody.innerHTML = '';
+      if (!Array.isArray(list) || list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">No bookings found.</td></tr>';
+        countCell.textContent = '0 bookings';
+        return;
+      }
+      for (const b of list) {
+        const disabledAttr = isPastStart(b) ? 'disabled title="Past/started — cannot cancel"' : '';
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="right">${b.id}</td>
+          <td>${b.facility}</td>
+          <td>${fmtDMY(b.date)}</td>
+          <td>${fmtSlot(b.timeSlot)}</td>
+          <td class="right"><button type="button" class="cancel-btn" data-id="${b.id}" ${disabledAttr}>Cancel</button></td>`;
+        tbody.appendChild(tr);
+      }
+      countCell.textContent = `${list.length} booking${list.length>1?'s':''}`;
+
+      // Click wiring with guard
+      tbody.querySelectorAll('.cancel-btn').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          if (btn.disabled) return;
+          cancelBooking(Number(btn.dataset.id));
+        });
+      });
+    }
+
+    // ---- Cancel
+    async function cancelBooking(id) {
+      if (!confirm('Are you sure you want to cancel this booking?')) return;
+      try {
+        const res = await fetch(`${API}/api/book/${id}`, { method: 'DELETE' });
+        const payload = await res.json().catch(()=> ({}));
+        if (!res.ok) showToast(payload?.error || 'Delete failed', true, { placement: 'below' });
+        else showToast('Booking canceled', false, { placement: 'below' });
+        loadMyBookings();
+      } catch (err) {
+        console.error('Error cancelling booking:', err);
+        showToast('Network error', true, { placement: 'below' });
+      }
+    }
+
+    // ---- Logout (stateless)
+    function doLogout(){
+      try{
+        localStorage.removeItem('hogwartsId');
+        localStorage.removeItem('role');
+        localStorage.removeItem('userId');
+        sessionStorage.clear?.();
+        if ('caches' in window) { caches.keys().then(keys => keys.forEach(k => caches.delete(k))); }
+      } finally {
+        location.replace('/login');
+      }
+    }
+
+    // ---- Wire controls ----
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('refreshBtn')?.addEventListener('click', () => {
+        loadMyBookings().then(()=> showToast('Refreshed', false, { placement: 'below' }));
+      });
+      document.getElementById('logoutBtn')?.addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); doLogout(); }, { passive:false });
+      loadMyBookings();
+    });
+  </script>
+</body>
+</html>
